@@ -1,4 +1,4 @@
-var Discord = require('discord.io');
+const {Client, Intents} = require('discord.js');
 var logger = require('winston');
 var auth = require('./auth.json');
 
@@ -36,10 +36,12 @@ var gameState = {
 }
 
 bot.on('message', function (user, userId, channelId, message, evt) {
-	//Our bot will listen for commands that begin with a '!' in all channels.
+	if('formless-void'==channelId){
+		
+	}
 	if (message.substring(0, 1) == '!'){
-		var args = message.substring(1).trim();
-		var cmd = args;
+		var cmd = message.substring(1).trim();
+		// Simple, atomic commands
 		switch(cmd) {
 			// !ping
 			case 'ping':
@@ -68,7 +70,9 @@ bot.on('message', function (user, userId, channelId, message, evt) {
 					message: 'Worlds: '+worldList
 				});
 				break;
-			// Just add any case commands if you want to..
 		}
+		//Complex Commands
+		let args=cmd.split(' ')
+			case 'join'
 	}
 });
