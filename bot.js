@@ -10,16 +10,13 @@ logger.add(new logger.transports.Console, {
 logger.level = 'debug';
 
 //Initialize Discord Bot
-var bot = new Discord.Client({
-	token: auth.token,
-	autorun: true,
-	messageCacheLimit: 0
-});
-bot.on('ready', function (evt) {
+const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+client.once('ready', () => {
 	logger.info('Connected');
 	logger.info('Logged in as: ');
 	logger.info(bot.username + ' - (' + bot.id + ')');
 });
+client.login(config.token);
 
 class World {
 	constructor(gameState){
