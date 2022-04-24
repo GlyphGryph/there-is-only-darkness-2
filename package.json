@@ -1,8 +1,11 @@
 {
-	“name”: “Let There Be”,
-	“version”: “0.0.1”,
-	“description”: “Casts light on proceedings.”,
-	“main”: “bot.js”,
-	“author”: “Moon Sprout”,
-	“dependencies”: {}
+	"name": "Let There Be",
+	"version": "0.0.1",
+	"description": "Casts light on proceedings.",
+	"main": "bot.js",
+	"author": "Moon Sprout",
+	"dependencies": {
+		"discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+		"winston": "^3.7.2"
+	}
 }
