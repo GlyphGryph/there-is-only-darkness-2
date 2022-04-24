@@ -10,11 +10,15 @@ logger.add(new logger.transports.Console, {
 logger.level = 'debug';
 
 //Initialize Discord Bot
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+const client = new Client({
+	partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
+	intents: ['DIRECT_MESSAGES', 'DIRECT_MESSAGE_REACTIONS', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS', 'GUILDS']
+});
 client.once('ready', () => {
 	logger.info('Connected');
-	logger.info('Logged in as: ');
-	logger.info(bot.username + ' - (' + bot.id + ')');
+	client.channels.fetch('967231000096682038').then(channel => {
+		channel.send('Connected!');
+	});
 });
 client.login(config.token);
 
@@ -32,27 +36,24 @@ var gameState = {
 	worlds: []
 }
 
-bot.on('message', function (user, userId, channelId, message, evt) {
-	if('formless-void'==channelId){
-		
-	}
-	if (message.substring(0, 1) == '!'){
-		var cmd = message.substring(1).trim();
+logger.info('Waiting...');
+client.on('messageCreate', message => {
+	//if('formless-void'==channelId){
+	//	
+	//}
+	logger.info('Received client message');
+
+	if (message.content.substring(0, 1) == '!'){
+		var cmd = message.content.substring(1).trim();
 		// Simple, atomic commands
 		switch(cmd) {
 			// !ping
 			case 'ping':
-				bot.sendMessage({
-					to: channelId,
-					message: 'I am alive.'
-				});
+				message.channel.send('I am alive.');
 				break;
 			case 'create world':
 				let world = new World(gameState);
-				bot.sendMessage({
-					to: channelId,
-					message: 'Created new world: '+world.name
-				});
+				message.reply('Created new world: '+world.name);
 				break;
 			case 'list worlds':
 				if(gameState.worlds.count > 0){
@@ -62,14 +63,13 @@ bot.on('message', function (user, userId, channelId, message, evt) {
 				} else {
 					worldList = 'No worlds exist.';
 				}
-				bot.sendMessage({
-					to: channelId,
-					message: 'Worlds: '+worldList
-				});
+				message.reply('Worlds: '+worldList);
 				break;
 		}
 		//Complex Commands
-		let args=cmd.split(' ')
-			case 'join'
+		//let args=cmd.split(' ');
+		//switch(args[0]) {
+		//	case 'join'
+		//}
 	}
 });
