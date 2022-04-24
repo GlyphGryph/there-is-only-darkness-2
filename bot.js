@@ -23,11 +23,31 @@ client.once('ready', () => {
 client.login(config.token);
 
 class World {
+	gameState; id; name;
+	users = [];
+
 	constructor(gameState){
+		this.gameState = gameState;
 		this.id = gameState.newWorldId;
 		this.name = 'World '+gameState.newWorldId;
 		gameState.newWorldId++;
 		gameState.worlds.push(this);
+	}
+	
+	has_user(discordId){
+		this.users.find(user => { user.discordId == discordId });
+	}
+}
+
+class User {
+	gamestate; world; username; discordId;
+
+	constructor(gameState, world, author){
+		this.gameState = gameState;
+		this.world = world;
+		this.world.users.push(this);
+		this.username = author.username;
+		this.discordId = author.id;
 	}
 }
 
@@ -36,7 +56,6 @@ var gameState = {
 	worlds: []
 }
 
-logger.info('Waiting...');
 client.on('messageCreate', message => {
 	//if('formless-void'==channelId){
 	//	
@@ -44,32 +63,37 @@ client.on('messageCreate', message => {
 	logger.info('Received client message');
 
 	if (message.content.substring(0, 1) == '!'){
-		var cmd = message.content.substring(1).trim();
+		let cmd = message.content.substring(1).trim();
+		let args=cmd.split(' ');
 		// Simple, atomic commands
-		switch(cmd) {
-			// !ping
-			case 'ping':
-				message.channel.send('I am alive.');
-				break;
-			case 'create world':
-				let world = new World(gameState);
-				message.reply('Created new world: '+world.name);
-				break;
-			case 'list worlds':
-				if(gameState.worlds.count > 0){
-					let worldList = gameState.worlds.map(world => {
-						return world.name;
-					}).join(', ');
-				} else {
-					worldList = 'No worlds exist.';
-				}
-				message.reply('Worlds: '+worldList);
-				break;
-		}
+		if('ping'==cmd){
+			message.channel.send('I am alive.');
+		}else if('create world'==cmd){
+			let world = new World(gameState);
+			message.reply('Created new world: '+world.name);
+		}else if('list worlds'==cmd){
+			if(gameState.worlds.length > 0){
+				let worldList = gameState.worlds.map(world => {
+					return world.name;
+				});
+				message.reply('Worlds ('+gameState.worlds.length+'): '+worldList.join(', '));
+			} else {
+				message.reply('No worlds exist.');
+			}
 		//Complex Commands
-		//let args=cmd.split(' ');
-		//switch(args[0]) {
-		//	case 'join'
-		//}
+		}else if('join'==args[0]){
+			let worldName = args.slice(1).join(' ');
+			let world = gameState.worlds.find(world => {return world.name == worldName});
+			if('undefined' == typeof world){
+				message.reply('A world by the name '+worldName+' does not exist');
+			}else if(world.has_user(message.author.id)){
+				message.reply('You are already a part of that world.')
+			}else{ // World Found!
+				let user = new User(gameState, world, message.author);
+				message.reply(user.username+' joined world '+world.name)
+			}
+		}else{
+			message.reply('Command "'+cmd+'" not recognized');
+		}
 	}
 });
