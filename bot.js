@@ -18,10 +18,10 @@ const client = new Client({
 	intents: ['DIRECT_MESSAGES', 'DIRECT_MESSAGE_REACTIONS', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS', 'GUILDS']
 });
 client.once('ready', () => {
-	client.guilds.fetch('967231000096682035').then(guild => {
+	client.guilds.fetch(config.serverId).then(guild => {
 		gameState.guild = guild;
 	});
-	client.channels.fetch('967231000096682038').then(channel => {
+	client.channels.fetch(config.generalChannelId).then(channel => {
 		channel.send('Connected!');
 		logger.info('Connected!');
 	});
@@ -37,5 +37,7 @@ var gameState = {
 
 client.on('messageCreate', message => {
 	logger.info('Received client message: '+message.content);
-	forgeListener(message, gameState);
+	if(message.channel.id==config.forgeChannelId){
+		forgeListener(message, gameState);
+	}
 });

@@ -16,8 +16,9 @@ class Player {
 			type: 'GUILD_TEXT',
 			reason: 'Player joined world'
 		}).then(channel => {
-			channel.setParent(world.categoryChannel.id);
 			this.channel = channel;
+			channel.setParent(world.categoryChannel.id);
+			channel.permissionOverwrites.create(channel.guild.roles.everyone, { VIEW_CHANNEL: false });
 		});
 	}
 }

@@ -20,7 +20,10 @@ class World {
 	}
 	
 	has_user(discordId){
-		this.players.find(player => { player.discordId == discordId });
+		let found = this.players.find(player => {
+			return player.discordId == discordId;
+		});
+		return 'undefined' != typeof found
 	}
 }
 
