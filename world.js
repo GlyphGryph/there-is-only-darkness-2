@@ -1,8 +1,10 @@
 var Player = require('./player.js');
+var PlayerChannel = require('./playerChannel.js');
 
 class World {
 	gameState; id; name; categoryChannel;
 	players = [];
+	playerChannels = [];
 	nextPlayerId = 0;
 
 	constructor(gameState){

@@ -3,7 +3,9 @@ var logger = require('winston');
 var config = require('./config.json');
 var World = require('./world.js');
 var Player = require('./player.js');
+var PlayerChannel = require('./playerChannel.js');
 var forgeListener = require('./forgeListener.js');
+var playerListener = require('./playerListener.js');
 
 //Configure logger settings
 logger.remove(logger.transports.Console);
@@ -32,12 +34,13 @@ client.login(config.token);
 var gameState = {
 	client: client,
 	newWorldId: 0,
-	worlds: []
+	worlds: [],
+	playerChannelsById: new Map(),
+	config: config
 }
 
 client.on('messageCreate', message => {
-	logger.info('Received client message: '+message.content);
-	if(message.channel.id==config.forgeChannelId){
-		forgeListener(message, gameState);
-	}
+	logger.info('Received client message: '+message.content+' on '+message.channel.id);
+	forgeListener(message, gameState);
+	playerListener(message, gameState);
 });

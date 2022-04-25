@@ -1,5 +1,6 @@
 const { Permissions } = require('discord.js');
 var World = require('./world.js');
+var PlayerChannel = require('./playerChannel.js');
 
 class Player {
 	gamestate; world; username; discordId; playerId; playerChannel;
@@ -21,11 +22,11 @@ class Player {
 			player.channel = channel;
 			channel.setParent(world.categoryChannel.id);
 			let everyoneRole = gameState.guild.roles.everyone;
-			console.log('Author has '+everyoneRole);
+			
 			channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
-			.then(channel => console.log(channel.permissionOverwrites.cache))
-			.catch(console.error);
 			channel.permissionOverwrites.edit(author.id, { VIEW_CHANNEL: true });
+			
+			this.playerChannel = new PlayerChannel(player.gameState, channel, world, player);
 		});
 	}
 }

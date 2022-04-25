@@ -3,6 +3,9 @@ var World = require('./world.js');
 var Player = require('./player.js');
 
 function forgeListener(message, gameState){
+	if(message.channel.id!=gameState.config.forgeChannelId){
+		return false;
+	}
 	if (message.content.substring(0, 1) == '!'){
 		let cmd = message.content.substring(1).trim();
 		let args=cmd.split(' ');
@@ -37,6 +40,8 @@ function forgeListener(message, gameState){
 			message.reply('Command "'+cmd+'" not recognized');
 		}
 	}
+	
+	return true;
 }
 
 
