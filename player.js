@@ -17,25 +17,15 @@ class Player {
 		gameState.guild.channels.create(channelName, {
 			type: 'GUILD_TEXT',
 			reason: 'Player joined world',
-			permissionOverwrites: [
-				{
-					id: gameState.guild.id,
-					deny: [Permissions.FLAGS.VIEW_CHANNEL],
-				},
-				{
-					id: author.id,
-					allow: [Permissions.FLAGS.VIEW_CHANNEL],
-				},
-			],
 		}).then(channel => {
 			player.channel = channel;
+			channel.setParent(world.categoryChannel.id);
 			let everyoneRole = gameState.guild.roles.everyone;
 			console.log('Author has '+everyoneRole);
 			channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
-			.then(channel => console.log(channel.permissionOverwrites.get(everyoneRole)))
-			.catch(console.error);;
+			.then(channel => console.log(channel.permissionOverwrites.cache))
+			.catch(console.error);
 			channel.permissionOverwrites.edit(author.id, { VIEW_CHANNEL: true });
-			channel.setParent(world.categoryChannel.id);
 		});
 	}
 }
