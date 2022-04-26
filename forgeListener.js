@@ -19,6 +19,7 @@ function forgeListener(message, game){
 		}else if('list worlds'==cmd){
 			if(game.worlds.length > 0){
 				let worldList = game.worlds.map(world => {
+					console.log(world);
 					return world.name;
 				});
 				message.reply('Worlds ('+game.worlds.length+'): '+worldList.join(', '));

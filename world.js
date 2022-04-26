@@ -67,15 +67,13 @@ class World {
 
 World.create = async function(game){
 	let displayId = game.newWorldDisplayId;
-	let name = 'World '+game.newWorldDisplayId;
+	let name = 'w'+displayId;
 	game.newWorldDisplayId++;
-	let channelName = name.split(' ').join('-');
-	let categoryChannel = await game.guild.channels.create(channelName, {
+	let channelname = name.split(' ').join('-');
+	let categoryChannel = await game.guild.channels.create(channelname, {
 		type: 'GUILD_CATEGORY',
 		reason: 'New world was created.'
 	});
-	console.log("display Id is "+game.newWorldDisplayId);
-	console.log(name);
 	var persistedWorld = new PersistedWorld({
 		displayId: displayId,
 		name: name,
@@ -85,7 +83,7 @@ World.create = async function(game){
 		let world = new World(game, persistedWorld, categoryChannel);
 		console.log('Created new world: '+world.name);
 		game.forgeChannel.send('Created new world: '+world.name);
-		game.worlds.push(this);
+		game.worlds.push(world);
 	}).catch(err => {
 		console.log('Failed to create new world.');
 		console.log(err);
@@ -100,7 +98,7 @@ World.load = async function(game){
 		let categoryChannel = await game.client.channels.fetch(persistedWorld.categoryChannelId);
 		let world = new World(game, persistedWorld, categoryChannel);
 		console.log('Loaded world: '+persistedWorld.name);
-		game.worlds.push(this);
+		game.worlds.push(world);
 		game.newWorldDisplayId = Math.max(world.displayId+1, game.newWorldDisplayId);
 		//Player.load(world)
 	}
