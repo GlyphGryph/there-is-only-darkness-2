@@ -5,7 +5,6 @@
 	"main": "bot.js",
 	"author": "Moon Sprout",
 	"dependencies": {
-		"acebase": "^1.17.0",
 		"discord.js": "^13.6.0",
 		"winston": "^3.7.2"
 	}
