@@ -1,6 +1,4 @@
 const { Permissions } = require('discord.js');
-var World = require('./world.js');
-var Player = require('./player.js');
 
 function playerListener(message, gameState){
 	if(!gameState.playerChannelsById.has(message.channel.id)){

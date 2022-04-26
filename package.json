@@ -6,6 +6,6 @@
 	"author": "Moon Sprout",
 	"dependencies": {
 		"discord.js": "^13.6.0",
-		"winston": "^3.7.2"
+		"mongoose": "^6.3.1"
 	}
 }
