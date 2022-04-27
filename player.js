@@ -96,6 +96,7 @@ Player.create = async function(game, world, user){
 		world.persistedWorld.players.push(persistedPlayer._id);
 		await world.save();
 		world.players.push(player);
+		game.playersByChannelId.set(channel.id, player);
 		console.log('Player successfully joined world!');
 		game.forgeChannel.send(player.username+' joined world '+world.name)
 	}).catch(err => {
@@ -115,6 +116,7 @@ Player.load = async function(world){
 		let player = new Player(persistedPlayer, world, channel);
 		console.log('Loaded player: '+player.username);
 		world.players.push(player);
+		world.game.playersByChannelId.set(channel.id, player);
 	}
 	return true;
 }

@@ -1,17 +1,16 @@
 const { Permissions } = require('discord.js');
 
-function playerListener(message, gameState){
-	if(!game.playerChannelsById.has(message.channel.id)){
+function playerListener(message, game){
+	// Is this message on a player channel by the channel's associated player?
+	if(!game.playersByChannelId.has(message.channel.id)){
 		return false;
 	}
-
-	let playerChannel = gameState.playerChannelsById.get(message.channel.id);
-	console.log('Got here, at least!');
-	console.log('Comparing '+message.author.id+' to '+playerChannel.player.discordId);
-	if(message.author.id != playerChannel.player.discordId){
+	let player = game.playersByChannelId.get(message.channel.id);
+	if(message.author.id != player.discordId){
 		return false;
 	}
 	
+	// If so, execute as a command
 	let cmd = message.content.trim();
 	let args=cmd.split(' ');
 	// Simple, atomic commands

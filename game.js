@@ -10,7 +10,7 @@ class Game{
 		this.client = client;
 		this.newWorldDisplayId = 0;
 		this.worlds = [];
-		this.playerChannelsById = new Map();
+		this.playersByChannelId = new Map();
 		this.config = config;
 	}
 	

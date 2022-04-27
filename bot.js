@@ -37,7 +37,7 @@ mongoose.connect(dbURI).then((result) =>{
 }).catch((err) => console.log(err));
 
 client.on('messageCreate', message => {
-	//console.log('Received client message: '+message.content+' on '+message.channel.id);
+	console.log('Received client message: '+message.content+' on '+message.channel.id);
 	forgeListener(message, game);
-	//playerListener(message, gameState);
+	playerListener(message, game);
 });
