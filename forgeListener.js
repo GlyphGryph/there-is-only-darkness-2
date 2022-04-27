@@ -19,7 +19,6 @@ function forgeListener(message, game){
 		}else if('list worlds'==cmd){
 			if(game.worlds.length > 0){
 				let worldList = game.worlds.map(world => {
-					console.log(world);
 					return world.name;
 				});
 				message.reply('Worlds ('+game.worlds.length+'): '+worldList.join(', '));
@@ -35,8 +34,7 @@ function forgeListener(message, game){
 			}else if(world.has_user(message.author.id)){
 				message.reply('You are already a part of that world.')
 			}else{ // World Found!
-				let player = new Player(game, world, message.author, message.guild);
-				message.reply(player.username+' joined world '+world.name)
+				Player.create(game, world, message.author);
 			}
 		}else{
 			message.reply('Command "'+cmd+'" not recognized');

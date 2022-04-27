@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
-const 	Player = require('./player.js');
-const PlayerChannel = require('./playerChannel.js');
+const Player = require('./player.js');
 const Schema = mongoose.Schema;
 
 const worldSchema = new Schema({
@@ -43,6 +42,7 @@ class World {
 		this.game = game;
 		this.persistedWorld = persistedWorld;
 		this.categoryChannel = categoryChannel;
+		this.players = [];
 		
 		return this;
 	}
@@ -55,6 +55,15 @@ class World {
 	}
 	get categoryChannel(){
 		return this.categoryChannel;
+	}
+	
+	get nextPlayerId(){
+		return this.persistedWorld.players.length
+	}
+	
+	async save(){
+		await this.persistedWorld.save();
+		return this;
 	}
 	
 	has_user(discordId){
@@ -100,7 +109,7 @@ World.load = async function(game){
 		console.log('Loaded world: '+persistedWorld.name);
 		game.worlds.push(world);
 		game.newWorldDisplayId = Math.max(world.displayId+1, game.newWorldDisplayId);
-		//Player.load(world)
+		Player.load(world);
 	}
 	return true;
 }
