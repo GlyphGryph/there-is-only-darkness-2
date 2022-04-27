@@ -76,6 +76,7 @@ Player.create = async function(game, world, user){
 	channel.setParent(world.categoryChannel.id);
 	let everyoneRole = game.guild.roles.everyone;
 	channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
+	console.log(user.id);
 	channel.permissionOverwrites.edit(user.id, { VIEW_CHANNEL: true });
 		
 	// Create persisted player
@@ -112,7 +113,19 @@ Player.load = async function(world){
 	for(const persistedPlayerId of world.persistedWorld.players){
 		console.log('attempting to load player '+persistedPlayerId);
 		let persistedPlayer = await PersistedPlayer.findById(persistedPlayerId);
-		let channel = await world.game.client.channels.fetch(persistedPlayer.channelId);
+		let channel = await world.game.client.channels.fetch(persistedPlayer.channelId).catch(async err => {
+			let channelName = persistedWorld.name.split(' ').join('-');
+			return await game.guild.channels.create(channelName, {
+				type: 'GUILD_CATEGORY',
+				reason: 'New world was created.'
+			});
+		});;
+		if(channel.parentId != world.categoryChannel.id){
+			channel.setParent(world.categoryChannel.id);
+			let everyoneRole = world.game.guild.roles.everyone;
+			channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
+			//channel.permissionOverwrites.edit(persistedPlayer.discordId, { VIEW_CHANNEL: true });
+		}
 		let player = new Player(persistedPlayer, world, channel);
 		console.log('Loaded player: '+player.username);
 		world.players.push(player);

@@ -104,7 +104,16 @@ World.create = async function(game){
 World.load = async function(game){
 	const persistedWorlds = await PersistedWorld.find();
 	for(const persistedWorld of persistedWorlds){
-		let categoryChannel = await game.client.channels.fetch(persistedWorld.categoryChannelId);
+		let categoryChannel = await game.client.channels.fetch(persistedWorld.categoryChannelId).catch(async err => {
+			let channelName = persistedWorld.name.split(' ').join('-');
+			let channel = await game.guild.channels.create(channelName, {
+				type: 'GUILD_CATEGORY',
+				reason: 'New world was created.'
+			});
+			persistedWorld.categoryChannelId = channel.id;
+			await persistedWorld.save();
+			return channel;
+		});
 		let world = new World(game, persistedWorld, categoryChannel);
 		console.log('Loaded world: '+persistedWorld.name);
 		game.worlds.push(world);
