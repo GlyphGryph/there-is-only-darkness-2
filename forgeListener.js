@@ -36,6 +36,14 @@ function forgeListener(message, game){
 			}else{ // World Found!
 				Player.create(game, world, message.author);
 			}
+		}else if('destroy'==args[0]){
+			let worldName = args.slice(1).join(' ');
+			let world = game.worlds.find(world => {return world.name == worldName});
+			if('undefined' == typeof world){
+				message.reply('A world by the name '+worldName+' does not exist');
+			}else{
+				world.destroy();
+			}
 		}else{
 			message.reply('Command "'+cmd+'" not recognized');
 		}

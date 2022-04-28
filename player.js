@@ -58,6 +58,11 @@ class Player{
 		});
 		return 'undefined' != typeof found
 	}
+	
+	async destroy(){
+		await PersistedPlayer.deleteOne(this.persistedPlayer);
+		this.channel.delete();
+	}
 }
 
 Player.create = async function(game, world, user){
@@ -124,7 +129,7 @@ Player.load = async function(world){
 			channel.setParent(world.categoryChannel.id);
 			let everyoneRole = world.game.guild.roles.everyone;
 			channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
-			//channel.permissionOverwrites.edit(persistedPlayer.discordId, { VIEW_CHANNEL: true });
+			channel.permissionOverwrites.edit(persistedPlayer.discordId, { VIEW_CHANNEL: true });
 		}
 		let player = new Player(persistedPlayer, world, channel);
 		console.log('Loaded player: '+player.username);

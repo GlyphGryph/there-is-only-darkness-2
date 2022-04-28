@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Player = require('./player.js');
+const {Room, roomSchema} = require('./room.js');
 const Schema = mongoose.Schema;
 
 const worldSchema = new Schema({
@@ -18,31 +19,22 @@ const worldSchema = new Schema({
 	players: [{
 		type: Schema.Types.ObjectId,
 		ref: "Player"
-	}]
+	}],
+	rooms: [roomSchema]
 }, {timestamps: true})
-
-worldSchema.methods.hasUser = function hasUser(playerId){
-	return false;
-	/*let found = this.players.find(player => {
-		return player.discordId == discordId;
-	});
-	return 'undefined' != typeof found*/
-};
-worldSchema.methods.findOrCreateCategory = function findOrCreateCategory(){
-	
-}
 
 const PersistedWorld = mongoose.model('World', worldSchema);
 
 class World {
 	game; persistedWorld; categoryChannel;
-	players;
+	players; rooms;
 	
 	constructor(game, persistedWorld, categoryChannel){
 		this.game = game;
 		this.persistedWorld = persistedWorld;
 		this.categoryChannel = categoryChannel;
 		this.players = [];
+		this.rooms = [];
 		
 		return this;
 	}
@@ -72,6 +64,16 @@ class World {
 		});
 		return 'undefined' != typeof found
 	}
+	
+	async destroy(){
+		for(const player of this.players){
+			player.destroy();
+		}
+		await PersistedWorld.deleteOne(this.persistedWorld);
+		this.categoryChannel.delete();
+		let index = this.game.worlds.indexOf(this);
+		this.game.worlds.splice(index, 1);
+	}
 }
 
 World.create = async function(game){
@@ -83,21 +85,39 @@ World.create = async function(game){
 		type: 'GUILD_CATEGORY',
 		reason: 'New world was created.'
 	});
+	
+	// Create Persisted world object
 	var persistedWorld = new PersistedWorld({
 		displayId: displayId,
 		name: name,
 		categoryChannelId: categoryChannel.id
 	});
+	
+	// Create world object
+	let world = new World(game, persistedWorld, categoryChannel);
+	game.worlds.push(world);
+	
+	// Add rooms
+	persistedWorld.rooms = [{
+		description: 'The formless void',
+		exits:[]
+	},{
+		description: 'The world of light and shadow.',
+		exits:[]
+	}];
+	
+	// Save world data
 	return persistedWorld.save().then(result => {
-		let world = new World(game, persistedWorld, categoryChannel);
 		console.log('Created new world: '+world.name);
 		game.forgeChannel.send('Created new world: '+world.name);
-		game.worlds.push(world);
+
 	}).catch(err => {
 		console.log('Failed to create new world.');
 		console.log(err);
-		game.forgeChannel.send('Could not create world.');
+		let index = game.worlds.indexOf(world);
+		game.worlds.splice(index, 1);
 		categoryChannel.delete();
+		game.forgeChannel.send('Could not create world.');
 	});
 }
 
