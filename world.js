@@ -56,11 +56,11 @@ worldSchema.methods.hasUser = async function(discordId){
 }
 
 worldSchema.methods.destroy = async function(){
-	let players = this.players.find();
-	for(const player of players){
+	await this.populate('players');
+	for(const player of this.players){
 		player.destroy();
 	}
-	this.categoryChannel.delete();
+	this.getCategoryChannel().delete();
 	await World.deleteOne(this);
 }
 

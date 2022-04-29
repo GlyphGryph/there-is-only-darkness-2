@@ -31,8 +31,8 @@ const forgeListener = async function (message){
 			}
 		}else if('destroy'==args[0]){
 			let worldName = args.slice(1).join(' ');
-			let world = await game.worlds.find(world => {return world.name == worldName});
-			if('undefined' == typeof world){
+			let world = await World.findOne({name: worldName});
+			if(null == world){
 				message.reply('A world by the name '+worldName+' does not exist');
 			}else{
 				world.destroy();

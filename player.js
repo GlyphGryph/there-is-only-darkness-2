@@ -15,10 +15,30 @@ const playerSchema = new Schema({
 	channelId: String
 });
 
+playerSchema.methods.getChannel = async function(){
+	let channel = await global.game.client.channels.fetch(this.channelId).catch(async err => {
+		let channelName = this.name.split(' ').join('-');
+		let channel = await global.game.guild.channels.create(channelName, {
+			type: 'GUILD_CATEGORY',
+			reason: 'New world was created.'
+		});
+		if(channel.parentId != world.categoryChannel.id){
+			channel.setParent(world.categoryChannel.id);
+			let everyoneRole = global.game.guild.roles.everyone;
+			channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
+			channel.permissionOverwrites.edit(this.discordId, { VIEW_CHANNEL: true });
+		}
+		this.channelId = channel.id;
+		this.save();
+		return channel;
+	});
+	return channel;
+};
+
 playerSchema.methods.destroy = async function(){
-	await PersistedPlayer.deleteOne(this.persistedPlayer);
-	this.channel.delete();
-}
+	await Player.deleteOne(this);
+	this.getChannel().then(channel=>{channel.delete()});
+};
 
 const Player = mongoose.model('Player', playerSchema);
 
@@ -67,27 +87,9 @@ Player.create = async function(world, user){
 
 Player.load = async function(world){
 	let players = await world.populate('players');
-	console.log(world.persistedWorld);
-	for(const persistedPlayerId of players){
-		console.log('attempting to load player '+persistedPlayerId);
-		let persistedPlayer = await PersistedPlayer.findById(persistedPlayerId);
-		let channel = await global.game.client.channels.fetch(persistedPlayer.channelId).catch(async err => {
-			let channelName = persistedWorld.name.split(' ').join('-');
-			return await global.game.guild.channels.create(channelName, {
-				type: 'GUILD_CATEGORY',
-				reason: 'New world was created.'
-			});
-		});;
-		if(channel.parentId != world.categoryChannel.id){
-			channel.setParent(world.categoryChannel.id);
-			let everyoneRole = global.game.guild.roles.everyone;
-			channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
-			channel.permissionOverwrites.edit(persistedPlayer.discordId, { VIEW_CHANNEL: true });
-		}
-		let player = new Player(persistedPlayer._id, world, channel);
+	for(const player of players){
+		world.getChannel();
 		console.log('Loaded player: '+player.username);
-		world.players.push(player);
-		global.game.playersByChannelId.set(channel.id, player);
 	}
 	return true;
 }
