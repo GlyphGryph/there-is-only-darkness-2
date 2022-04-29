@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const World = require('./world.js');
 const Player = require('./player.js');
 
-const forgeListener = async function (message, game){
-	if(message.channel.id!=game.forgeChannel.id){
+const forgeListener = async function (message){
+	if(message.channel.id!=global.game.forgeChannel.id){
 		return false;
 	}
 	console.log('Received message from forge channel...');
@@ -21,13 +21,13 @@ const forgeListener = async function (message, game){
 		//Complex Commands
 		}else if('join'==args[0]){
 			let worldName = args.slice(1).join(' ');
-			let world = await game.worlds.find(world => {return world.name == worldName});
-			if('undefined' == typeof world){
+			let world = await World.findOne({name: worldName});
+			if(null == world){
 				message.reply('A world by the name '+worldName+' does not exist');
-			}else if(await world.has_user(message.author.id)){
+			}else if(await world.hasUser(message.author.id)){
 				message.reply('You are already a part of that world.')
 			}else{ // World Found!
-				Player.create(game, world, message.author);
+				Player.create(world, message.author);
 			}
 		}else if('destroy'==args[0]){
 			let worldName = args.slice(1).join(' ');

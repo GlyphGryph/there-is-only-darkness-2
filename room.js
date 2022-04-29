@@ -9,19 +9,6 @@ const roomSchema = new Schema({
 	}]
 });
 
-class Room {
-	world; persistedRoom; exits;
-	
-	constructor(world, persistedRoom){
-		this.world = world;
-		this.persistedRoom = persistedRoom;
-		this.exits = [];
-	}
-	
-	addExit(){
-		// Todo
-	};
-}
+const Room = mongoose.model('Room', roomSchema);
 
-exports.roomSchema = roomSchema;
-exports.Room = Room;
+module.exports = Room;

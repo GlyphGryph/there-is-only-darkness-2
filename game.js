@@ -9,8 +9,6 @@ class Game{
 	constructor(client){
 		this.client = client;
 		this.newWorldDisplayId = 0;
-		this.worlds = [];
-		this.playersByChannelId = new Map();
 		this.config = config;
 	}
 	

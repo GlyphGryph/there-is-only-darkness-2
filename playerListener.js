@@ -1,12 +1,10 @@
 const { Permissions } = require('discord.js');
+const Player = require('./player.js');
 
-function playerListener(message, game){
+const playerListener = async function(message){
 	// Is this message on a player channel by the channel's associated player?
-	if(!game.playersByChannelId.has(message.channel.id)){
-		return false;
-	}
-	let player = game.playersByChannelId.get(message.channel.id);
-	if(message.author.id != player.discordId){
+	let player = await Player.findOne({channelId: message.channel.id})
+	if(null == player || message.author.id != player.discordId){
 		return false;
 	}
 	

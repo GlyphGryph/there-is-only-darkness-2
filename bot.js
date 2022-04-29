@@ -24,9 +24,7 @@ client.once('ready', async () => {
 	await client.channels.fetch(config.forgeChannelId).then(channel => {
 		global.game.forgeChannel = channel;
 	});
-	await global.game.load().then( () =>{
-		console.log('Loaded '+global.game.worlds.length+' worlds.');
-	});
+	await global.game.load();
 });
 
 //Connect to Database and then login to client
@@ -38,6 +36,6 @@ mongoose.connect(dbURI).then((result) =>{
 
 client.on('messageCreate', message => {
 	console.log('Received client message: '+message.content+' on '+message.channel.id);
-	forgeListener(message, global.game);
-	playerListener(message, global.game);
+	forgeListener(message);
+	playerListener(message);
 });

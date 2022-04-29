@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Player = require('./player.js');
-const {Room, roomSchema} = require('./room.js');
+const Room = require('./room.js');
 const Schema = mongoose.Schema;
 
 const worldSchema = new Schema({
@@ -20,10 +20,11 @@ const worldSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref: "Player"
 	}],
-	rooms: [roomSchema]
+	rooms: [{
+		type: Schema.Types.ObjectId,
+		ref: "Room"
+	}],
 }, {timestamps: true})
-
-const World = mongoose.model('World', worldSchema);
 
 worldSchema.methods.getCategoryChannel = async function(){
 	// Get channel if it exists, create it if it does not
@@ -38,17 +39,20 @@ worldSchema.methods.getCategoryChannel = async function(){
 		await this.save();
 		return channel;
 	});
+	return categoryChannel;
 }
 
-worldSchema.methods.nextPlayerId = async function(){
+worldSchema.methods.getNextPlayerId = function(){
 	return this.players.length;
 }
 
 worldSchema.methods.hasUser = async function(discordId){
-	let found = await this.players.find(player => {
+	let players = await this.populate('players');
+	console.log(this.players);
+	let found = this.players.find(player => {
 		return player.discordId == discordId;
 	});
-	return 'undefined' != typeof found
+	return ('undefined' != typeof found);
 }
 
 worldSchema.methods.destroy = async function(){
@@ -59,6 +63,8 @@ worldSchema.methods.destroy = async function(){
 	this.categoryChannel.delete();
 	await World.deleteOne(this);
 }
+
+const World = mongoose.model('World', worldSchema);
 
 World.create = async function(){
 	let displayId = global.game.newWorldDisplayId;
@@ -74,17 +80,18 @@ World.create = async function(){
 	var world = new World({
 		displayId: displayId,
 		name: name,
-		categoryChannelId: categoryChannel.id
+		categoryChannelId: categoryChannel.id,
+		players: [],
+		rooms: []
 	});
 	
 	// Add rooms
-	world.rooms = [{
-		description: 'The formless void',
-		exits:[]
-	},{
-		description: 'The world of light and shadow.',
-		exits:[]
-	}];
+	new Room({description: 'The formless void.', exits:[]}).save().then(room => {
+		world.rooms.push(room)
+	});
+	new Room({description: 'The world of light and shadow.', exits:[]}).save().then(room => {
+		world.rooms.push(room)
+	});
 	
 	// Save world data
 	return world.save().then(result => {
@@ -102,17 +109,7 @@ World.create = async function(){
 World.load = async function(){
 	const worlds = await World.find();
 	for(const world of worlds){
-		let categoryChannel = await global.game.client.channels.fetch(world.categoryChannelId).catch(async err => {
-			console.log('error');
-			let channelName = world.name.split(' ').join('-');
-			let channel = await global.game.guild.channels.create(channelName, {
-				type: 'GUILD_CATEGORY',
-				reason: 'New world was created.'
-			});
-			world.categoryChannelId = channel.id;
-			await world.save();
-			return channel;
-		});
+		world.getCategoryChannel();
 		console.log('Loaded world: '+world.name);
 		global.game.newWorldDisplayId = Math.max(world.displayId+1, global.game.newWorldDisplayId);
 		//Player.load(world);
@@ -125,7 +122,7 @@ World.list = async function(){
 	let worlds = await World.find();
 	if(worlds.length > 0){
 		worldList = worlds.map(world =>{ return world.name });
-		global.game.forgeChannel.send('Worlds ('+global.game.worlds.length+'): '+worldList.join(', '));
+		global.game.forgeChannel.send('Worlds ('+worlds.length+'): '+worldList.join(', '));
 	} else {
 		global.game.forgeChannel.send('No worlds exist.');
 	}
