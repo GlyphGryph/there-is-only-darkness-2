@@ -60,7 +60,7 @@ worldSchema.methods.destroy = async function(){
 	for(const player of this.players){
 		player.destroy();
 	}
-	this.getCategoryChannel().delete();
+	this.getCategoryChannel().then(channel=>{channel.delete()});
 	await World.deleteOne(this);
 }
 
@@ -88,9 +88,15 @@ World.create = async function(){
 	// Add rooms
 	new Room({description: 'The formless void.', exits:[]}).save().then(room => {
 		world.rooms.push(room)
+	}).catch(err => {
+		console.log('Couldnt create room: ')
+		console.log(err);
 	});
 	new Room({description: 'The world of light and shadow.', exits:[]}).save().then(room => {
 		world.rooms.push(room)
+	}).catch(err => {
+		console.log('Couldnt create room: ')
+		console.log(err);
 	});
 	
 	// Save world data

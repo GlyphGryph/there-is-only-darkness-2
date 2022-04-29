@@ -37,7 +37,7 @@ playerSchema.methods.getChannel = async function(){
 
 playerSchema.methods.destroy = async function(){
 	await Player.deleteOne(this);
-	this.getChannel().then(channel=>{channel.delete()});
+	this.getChannel().then(channel=>{ channel.delete()});
 };
 
 const Player = mongoose.model('Player', playerSchema);
