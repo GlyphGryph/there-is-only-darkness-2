@@ -29,7 +29,6 @@ roomSchema.methods.getExitsDescription = async function(){
 	let exitNames = this.exits.map(exit => {
 		return exit.name;
 	});
-	console.log(this.exits);
 	if(exitNames.length > 0){
 		return "You see "+exitNames.length+" exits: "+exitNames.join(" ");
 	} else {

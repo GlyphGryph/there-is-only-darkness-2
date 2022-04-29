@@ -8,7 +8,7 @@ const playerSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref: "World"
 	},
-	playername: String,
+	name: String,
 	username: String,
 	discordId: String,
 	playerId: Number,
@@ -47,9 +47,19 @@ playerSchema.methods.destroy = async function(){
 
 playerSchema.methods.look = async function(){
 	await this.populate('room');
+	let players = await Player.find({room: this.room._id, _id:{$ne: this._id}});
 	this.getChannel().then(async channel => {
+		let textSoFar = this.room.description;
+		textSoFar += '\n---\n';
 		let exitsDescription = await this.room.getExitsDescription();
-		channel.send(this.room.description+'\n---\n'+exitsDescription);
+		textSoFar += exitsDescription;
+		textSoFar += '\n---\nOther players at this location: ';
+		console.log(players);
+		let playerNames = players.map(player=>{return player.name});
+		console.log(playerNames);
+		textSoFar += playerNames.join(", ");
+		
+		channel.send(textSoFar);
 	});
 }
 
@@ -90,7 +100,7 @@ Player.create = async function(world, user){
 	// Create persisted player
 	let player = new Player({
 		world: world,
-		playername: playerName,
+		name: playerName,
 		username: user.username,
 		discordId: user.id,
 		playerId: playerId,
