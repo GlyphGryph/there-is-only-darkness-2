@@ -60,8 +60,13 @@ worldSchema.methods.destroy = async function(){
 	for(const player of this.players){
 		player.destroy();
 	}
+	await this.populate('rooms');
+	for(const room of this.rooms){
+		room.destroy();
+	}
 	this.getCategoryChannel().then(channel=>{channel.delete()});
 	await World.deleteOne(this);
+	global.game.forgeChannel.send('Destroy world '+this.name);
 }
 
 const World = mongoose.model('World', worldSchema);
@@ -86,13 +91,15 @@ World.create = async function(){
 	});
 	
 	// Add rooms
-	new Room({description: 'The formless void.', exits:[]}).save().then(room => {
+	await new Room({description: 'The formless void.', exits:[]}).save().then(room => {
+		console.log('Created room: '+room);
 		world.rooms.push(room)
 	}).catch(err => {
 		console.log('Couldnt create room: ')
 		console.log(err);
 	});
-	new Room({description: 'The world of light and shadow.', exits:[]}).save().then(room => {
+	await new Room({description: 'The world of light and shadow.', exits:[]}).save().then(room => {
+		console.log('Created room: '+room);
 		world.rooms.push(room)
 	}).catch(err => {
 		console.log('Couldnt create room: ')
@@ -103,7 +110,6 @@ World.create = async function(){
 	return world.save().then(result => {
 		console.log('Created new world: '+world.name);
 		global.game.forgeChannel.send('Created new world: '+world.name);
-
 	}).catch(err => {
 		console.log('Failed to create new world.');
 		console.log(err);

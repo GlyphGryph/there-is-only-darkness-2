@@ -9,6 +9,11 @@ const roomSchema = new Schema({
 	}]
 });
 
+roomSchema.methods.destroy = async function(){
+	await Room.deleteOne(this);
+	return true;
+}
+
 const Room = mongoose.model('Room', roomSchema);
 
 module.exports = Room;

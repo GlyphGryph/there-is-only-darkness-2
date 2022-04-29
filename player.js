@@ -12,7 +12,12 @@ const playerSchema = new Schema({
 	username: String,
 	discordId: String,
 	playerId: Number,
-	channelId: String
+	channelId: String,
+	room: {
+		type: Schema.Types.ObjectId,
+		ref: "Room",
+		required: true
+	},
 });
 
 playerSchema.methods.getChannel = async function(){
@@ -67,7 +72,8 @@ Player.create = async function(world, user){
 		username: user.username,
 		discordId: user.id,
 		playerId: playerId,
-		channelId: channel.id
+		channelId: channel.id,
+		room: world.rooms[0]
 	});
 
 	// Create and hook up actual player object

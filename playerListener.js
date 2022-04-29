@@ -13,7 +13,8 @@ const playerListener = async function(message){
 	let args=cmd.split(' ');
 	// Simple, atomic commands
 	if('look'==cmd){
-		message.channel.send('There is only darkness.');
+		await player.populate('room');
+		message.channel.send(player.room.description+' There is only darkness.');
 	}else{
 		message.channel.send('Command "'+cmd+'" not recognized');
 	}
