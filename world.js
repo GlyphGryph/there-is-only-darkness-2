@@ -91,20 +91,26 @@ World.create = async function(){
 	});
 	
 	// Add rooms
-	await new Room({description: 'The formless void.', exits:[]}).save().then(room => {
-		console.log('Created room: '+room);
-		world.rooms.push(room)
+	let room1 = await new Room({description: 'The formless void.', exits:[]}).save().then(room => {
+		world.rooms.push(room);
+		return room;
 	}).catch(err => {
 		console.log('Couldnt create room: ')
 		console.log(err);
+		throw(err);
 	});
-	await new Room({description: 'The world of light and shadow.', exits:[]}).save().then(room => {
-		console.log('Created room: '+room);
+	let room2 = await new Room({description: 'The world of light and shadow.', exits:[]}).save().then(room => {
 		world.rooms.push(room)
+		return room;
 	}).catch(err => {
 		console.log('Couldnt create room: ')
 		console.log(err);
+		throw(err);
 	});
+	room2.exits=[{to: room1, name: "backwards"}]
+	await room2.save();
+	room1.exits=[{to: room2, name: "forward"}]
+	await room1.save();
 	
 	// Save world data
 	return world.save().then(result => {

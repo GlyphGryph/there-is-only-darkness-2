@@ -45,6 +45,28 @@ playerSchema.methods.destroy = async function(){
 	this.getChannel().then(channel=>{ channel.delete()});
 };
 
+playerSchema.methods.look = async function(){
+	await this.populate('room');
+	this.getChannel().then(async channel => {
+		let exitsDescription = await this.room.getExitsDescription();
+		channel.send(this.room.description+'\n---\n'+exitsDescription);
+	});
+}
+
+playerSchema.methods.moveTo = async function(newRoom, method){
+	this.room = newRoom;
+	let player = this;
+	this.getChannel().then(async channel => {
+		channel.send("You "+method);
+	});
+	return await this.save();
+}
+
+playerSchema.methods.getRoom = async function(){
+	await this.populate('room');
+	return this.room;
+}
+
 const Player = mongoose.model('Player', playerSchema);
 
 Player.create = async function(world, user){

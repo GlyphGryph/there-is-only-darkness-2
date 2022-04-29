@@ -13,8 +13,16 @@ const playerListener = async function(message){
 	let args=cmd.split(' ');
 	// Simple, atomic commands
 	if('look'==cmd){
-		await player.populate('room');
-		message.channel.send(player.room.description+' There is only darkness.');
+		player.look();
+	}else if('go'==args[0]){
+		let room = await player.getRoom();
+		chosenExit = await room.getExit(args[1]);
+		if(!!chosenExit){
+			await player.moveTo(chosenExit.to, ' moves '+chosenExit.name+'.');
+			player.look();
+		} else {
+			message.channel.send(args[1]+' is not a valid exit.');
+		}
 	}else{
 		message.channel.send('Command "'+cmd+'" not recognized');
 	}
