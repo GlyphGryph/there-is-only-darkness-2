@@ -5,7 +5,7 @@ const config = require('./config.json');
 class Game{
 	client; newWorldDisplayId; worlds; playerChannelsById;
 	config;
-	guild; generalChannel; forgeChannel;
+	guild; monitorChannel; forgeChannel;
 	constructor(client){
 		this.client = client;
 		this.newWorldDisplayId = 0;

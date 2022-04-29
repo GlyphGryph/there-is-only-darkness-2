@@ -16,8 +16,8 @@ client.once('ready', async () => {
 	await client.guilds.fetch(config.serverId).then(guild => {
 		global.game.guild = guild;
 	});
-	await client.channels.fetch(config.generalChannelId).then(channel => {
-		global.game.generalChannel = channel;
+	await client.channels.fetch(config.monitorChannelId).then(channel => {
+		global.game.monitorChannel = channel;
 		channel.send('Connected!');
 		console.log('Connected to Discord server.');
 	});
