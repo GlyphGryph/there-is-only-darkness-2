@@ -18,14 +18,18 @@ const playerSchema = new Schema({
 const PersistedPlayer = mongoose.model('Player', playerSchema);
 
 class Player{
-	game; persistedPlayer;
+	game; persistedPlayerId;
 	world; channel;
 	
-	constructor(persistedPlayer, world, channel){
+	constructor(persistedPlayerId, world, channel){
 		this.game = world.game;
-		this.persistedPlayer = persistedPlayer;
+		this.persistedPlayerId = persistedPlayerId;
 		this.world = world;
 		this.channel = channel;
+	}
+	
+	persistedPlayer(){
+		return PersistedPlayer.findById(this.persistedPlayerId);
 	}
 	
 	get displayId(){
@@ -96,7 +100,7 @@ Player.create = async function(game, world, user){
 
 	// Create and hook up actual player object
 	return persistedPlayer.save().then(async result => {
-		let player = new Player(persistedPlayer, world, channel);
+		let player = new Player(persistedPlayer._id, world, channel);
 		world.players.push(player);
 		// TODO: This is probably wrong
 		world.persistedWorld.players.push(persistedPlayer._id);
@@ -115,7 +119,9 @@ Player.create = async function(game, world, user){
 }
 
 Player.load = async function(world){
-	for(const persistedPlayerId of world.persistedWorld.players){
+	let players = await world.persistedWorld.players;
+	console.log(world.persistedWorld);
+	for(const persistedPlayerId of players){
 		console.log('attempting to load player '+persistedPlayerId);
 		let persistedPlayer = await PersistedPlayer.findById(persistedPlayerId);
 		let channel = await world.game.client.channels.fetch(persistedPlayer.channelId).catch(async err => {
@@ -131,7 +137,7 @@ Player.load = async function(world){
 			channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
 			channel.permissionOverwrites.edit(persistedPlayer.discordId, { VIEW_CHANNEL: true });
 		}
-		let player = new Player(persistedPlayer, world, channel);
+		let player = new Player(persistedPlayer._id, world, channel);
 		console.log('Loaded player: '+player.username);
 		world.players.push(player);
 		world.game.playersByChannelId.set(channel.id, player);

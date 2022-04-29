@@ -10,22 +10,22 @@ const client = new Client({
 	partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
 	intents: ['DIRECT_MESSAGES', 'DIRECT_MESSAGE_REACTIONS', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS', 'GUILDS']
 });
-var game;
+
 client.once('ready', async () => {
-	game = new Game(client);
+	global.game = new Game(client);
 	await client.guilds.fetch(config.serverId).then(guild => {
-		game.guild = guild;
+		global.game.guild = guild;
 	});
 	await client.channels.fetch(config.generalChannelId).then(channel => {
-		game.generalChannel = channel;
+		global.game.generalChannel = channel;
 		channel.send('Connected!');
 		console.log('Connected to Discord server.');
 	});
 	await client.channels.fetch(config.forgeChannelId).then(channel => {
-		game.forgeChannel = channel;
+		global.game.forgeChannel = channel;
 	});
-	await game.load().then( () =>{
-		console.log('Loaded '+game.worlds.length+' worlds.');
+	await global.game.load().then( () =>{
+		console.log('Loaded '+global.game.worlds.length+' worlds.');
 	});
 });
 
@@ -38,6 +38,6 @@ mongoose.connect(dbURI).then((result) =>{
 
 client.on('messageCreate', message => {
 	console.log('Received client message: '+message.content+' on '+message.channel.id);
-	forgeListener(message, game);
-	playerListener(message, game);
+	forgeListener(message, global.game);
+	playerListener(message, global.game);
 });

@@ -23,82 +23,62 @@ const worldSchema = new Schema({
 	rooms: [roomSchema]
 }, {timestamps: true})
 
-const PersistedWorld = mongoose.model('World', worldSchema);
+const World = mongoose.model('World', worldSchema);
 
-class World {
-	game; persistedWorld; categoryChannel;
-	players; rooms;
-	
-	constructor(game, persistedWorld, categoryChannel){
-		this.game = game;
-		this.persistedWorld = persistedWorld;
-		this.categoryChannel = categoryChannel;
-		this.players = [];
-		this.rooms = [];
-		
-		return this;
-	}
-	
-	get displayId(){
-		return this.persistedWorld.displayId;
-	}
-	get name(){
-		return this.persistedWorld.name;
-	}
-	get categoryChannel(){
-		return this.categoryChannel;
-	}
-	
-	get nextPlayerId(){
-		return this.persistedWorld.players.length
-	}
-	
-	async save(){
-		await this.persistedWorld.save();
-		return this;
-	}
-	
-	has_user(discordId){
-		let found = this.players.find(player => {
-			return player.discordId == discordId;
+worldSchema.methods.getCategoryChannel = async function(){
+	// Get channel if it exists, create it if it does not
+	let categoryChannel = await global.game.client.channels.fetch(this.categoryChannelId).catch(async err => {
+		console.log('Channel does not exist, creating channel.');
+		let channelName = this.name.split(' ').join('-');
+		let channel = await global.game.guild.channels.create(channelName, {
+			type: 'GUILD_CATEGORY',
+			reason: 'World channel could not be found.'
 		});
-		return 'undefined' != typeof found
-	}
-	
-	async destroy(){
-		for(const player of this.players){
-			player.destroy();
-		}
-		await PersistedWorld.deleteOne(this.persistedWorld);
-		this.categoryChannel.delete();
-		let index = this.game.worlds.indexOf(this);
-		this.game.worlds.splice(index, 1);
-	}
+		this.categoryChannelId = channel.id;
+		await this.save();
+		return channel;
+	});
 }
 
-World.create = async function(game){
-	let displayId = game.newWorldDisplayId;
+worldSchema.methods.nextPlayerId = async function(){
+	return this.players.length;
+}
+
+worldSchema.methods.hasUser = async function(discordId){
+	let found = await this.players.find(player => {
+		return player.discordId == discordId;
+	});
+	return 'undefined' != typeof found
+}
+
+worldSchema.methods.destroy = async function(){
+	let players = this.players.find();
+	for(const player of players){
+		player.destroy();
+	}
+	this.categoryChannel.delete();
+	await World.deleteOne(this);
+}
+
+World.create = async function(){
+	let displayId = global.game.newWorldDisplayId;
 	let name = 'w'+displayId;
-	game.newWorldDisplayId++;
-	let channelname = name.split(' ').join('-');
-	let categoryChannel = await game.guild.channels.create(channelname, {
+	global.game.newWorldDisplayId++;
+	let channelname = await name.split(' ').join('-');
+	let categoryChannel = await global.game.guild.channels.create(channelname, {
 		type: 'GUILD_CATEGORY',
 		reason: 'New world was created.'
 	});
 	
-	// Create Persisted world object
-	var persistedWorld = new PersistedWorld({
+	// Create world object to save later
+	var world = new World({
 		displayId: displayId,
 		name: name,
 		categoryChannelId: categoryChannel.id
 	});
 	
-	// Create world object
-	let world = new World(game, persistedWorld, categoryChannel);
-	game.worlds.push(world);
-	
 	// Add rooms
-	persistedWorld.rooms = [{
+	world.rooms = [{
 		description: 'The formless void',
 		exits:[]
 	},{
@@ -107,40 +87,48 @@ World.create = async function(game){
 	}];
 	
 	// Save world data
-	return persistedWorld.save().then(result => {
+	return world.save().then(result => {
 		console.log('Created new world: '+world.name);
-		game.forgeChannel.send('Created new world: '+world.name);
+		global.game.forgeChannel.send('Created new world: '+world.name);
 
 	}).catch(err => {
 		console.log('Failed to create new world.');
 		console.log(err);
-		let index = game.worlds.indexOf(world);
-		game.worlds.splice(index, 1);
 		categoryChannel.delete();
-		game.forgeChannel.send('Could not create world.');
+		global.game.forgeChannel.send('Could not create world.');
 	});
 }
 
-World.load = async function(game){
-	const persistedWorlds = await PersistedWorld.find();
-	for(const persistedWorld of persistedWorlds){
-		let categoryChannel = await game.client.channels.fetch(persistedWorld.categoryChannelId).catch(async err => {
-			let channelName = persistedWorld.name.split(' ').join('-');
-			let channel = await game.guild.channels.create(channelName, {
+World.load = async function(){
+	const worlds = await World.find();
+	for(const world of worlds){
+		let categoryChannel = await global.game.client.channels.fetch(world.categoryChannelId).catch(async err => {
+			console.log('error');
+			let channelName = world.name.split(' ').join('-');
+			let channel = await global.game.guild.channels.create(channelName, {
 				type: 'GUILD_CATEGORY',
 				reason: 'New world was created.'
 			});
-			persistedWorld.categoryChannelId = channel.id;
-			await persistedWorld.save();
+			world.categoryChannelId = channel.id;
+			await world.save();
 			return channel;
 		});
-		let world = new World(game, persistedWorld, categoryChannel);
-		console.log('Loaded world: '+persistedWorld.name);
-		game.worlds.push(world);
-		game.newWorldDisplayId = Math.max(world.displayId+1, game.newWorldDisplayId);
-		Player.load(world);
+		console.log('Loaded world: '+world.name);
+		global.game.newWorldDisplayId = Math.max(world.displayId+1, global.game.newWorldDisplayId);
+		//Player.load(world);
 	}
+	World.list();
 	return true;
+}
+
+World.list = async function(){
+	let worlds = await World.find();
+	if(worlds.length > 0){
+		worldList = worlds.map(world =>{ return world.name });
+		global.game.forgeChannel.send('Worlds ('+global.game.worlds.length+'): '+worldList.join(', '));
+	} else {
+		global.game.forgeChannel.send('No worlds exist.');
+	}
 }
 
 module.exports = World;
