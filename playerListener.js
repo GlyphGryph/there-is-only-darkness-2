@@ -18,7 +18,7 @@ const playerListener = async function(message){
 		let room = await player.getRoom();
 		chosenExit = await room.getExit(args[1]);
 		if(!!chosenExit){
-			await player.moveTo(chosenExit.to, ' moves '+chosenExit.name+'.');
+			await player.moveTo(chosenExit.to, 'move', chosenExit.name);
 			player.look();
 		} else {
 			message.channel.send(args[1]+' is not a valid exit.');

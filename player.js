@@ -69,11 +69,34 @@ playerSchema.methods.look = async function(){
 	});
 }
 
-playerSchema.methods.moveTo = async function(newRoom, method){
+playerSchema.methods.moveTo = async function(newRoom, method, direction){
+	let oldRoomPlayers = await Player.find({room: this.room._id, _id: {$ne: this._id}});
 	this.room = newRoom;
+	let newRoomPlayers = await Player.find({room: this.room._id, _id: {$ne: this._id}});
 	let player = this;
+	let directions = {
+		forward: {opposite: 'backwards'},
+		backwards: {opposite: 'forward'}
+	};
+	let descriptions = {
+		move: {
+			own: 'You move '+direction+'.',
+			othersGoing: this.name+' moves away to the '+direction+'.',
+			othersComing: this.name+' moves into the room from the '+directions[direction].opposite
+		}
+	};
 	this.getChannel().then(async channel => {
-		channel.send("You "+method);
+		channel.send(descriptions[method].own);
+	});
+	oldRoomPlayers.forEach(player=>{
+			player.getChannel().then(channel => {
+				channel.send(descriptions[method].othersGoing);
+			});
+	});
+	newRoomPlayers.forEach(player=>{
+		player.getChannel().then(channel => {
+			channel.send(descriptions[method].othersComing);
+		});
 	});
 	return await this.save();
 }
