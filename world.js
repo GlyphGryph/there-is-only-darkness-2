@@ -66,7 +66,7 @@ worldSchema.methods.destroy = async function(){
 	}
 	this.getCategoryChannel().then(channel=>{channel.delete()});
 	await World.deleteOne(this);
-	global.game.forgeChannel.send('Destroy world '+this.name);
+	global.game.forgeChannel.send('Destroyed world '+this.name);
 }
 
 const World = mongoose.model('World', worldSchema);
@@ -130,7 +130,7 @@ World.load = async function(){
 		world.getCategoryChannel();
 		console.log('Loaded world: '+world.name);
 		global.game.newWorldDisplayId = Math.max(world.displayId+1, global.game.newWorldDisplayId);
-		//Player.load(world);
+		Player.load(world);
 	}
 	World.list();
 	return true;

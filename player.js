@@ -22,16 +22,20 @@ const playerSchema = new Schema({
 
 playerSchema.methods.getChannel = async function(){
 	let channel = await global.game.client.channels.fetch(this.channelId).catch(async err => {
+		console.log('Channel for '+this.name+' not found, creating channel.');
 		let channelName = this.name.split(' ').join('-');
 		let channel = await global.game.guild.channels.create(channelName, {
-			type: 'GUILD_CATEGORY',
-			reason: 'New world was created.'
+			type: 'GUILD_TEXT',
+			reason: 'Player joined world',
 		});
-		if(channel.parentId != world.categoryChannel.id){
-			channel.setParent(world.categoryChannel.id);
-			let everyoneRole = global.game.guild.roles.everyone;
-			channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
-			channel.permissionOverwrites.edit(this.discordId, { VIEW_CHANNEL: true });
+		await this.populate('world');
+		let categoryChannel = await this.world.getCategoryChannel();
+		if(channel.parentId != categoryChannel.id){
+			await channel.setParent(categoryChannel.id);
+			let everyoneRole = await global.game.guild.roles.everyone;
+			console.log('DiscordId is '+this.discordId);
+			await channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
+			await channel.permissionOverwrites.edit(this.discordId, { VIEW_CHANNEL: true });
 		}
 		this.channelId = channel.id;
 		this.save();
@@ -53,11 +57,13 @@ playerSchema.methods.look = async function(){
 		textSoFar += '\n---\n';
 		let exitsDescription = await this.room.getExitsDescription();
 		textSoFar += exitsDescription;
-		textSoFar += '\n---\nOther players at this location: ';
-		console.log(players);
-		let playerNames = players.map(player=>{return player.name});
-		console.log(playerNames);
-		textSoFar += playerNames.join(", ");
+		if(players.length > 0){ 
+			textSoFar += '\n---\nOther players at this location: ';
+			console.log(players);
+			let playerNames = players.map(player=>{return player.name});
+			console.log(playerNames);
+			textSoFar += playerNames.join(", ");
+		}
 		
 		channel.send(textSoFar);
 	});
@@ -85,17 +91,6 @@ Player.create = async function(world, user){
 	let playerId = world.getNextPlayerId();
 	let playerName = "Player "+playerId;
 	let channelName = world.name.toLowerCase().split(" ").join("-")+'-player-'+playerId;
-	
-	// Create Channel
-	let channel = await global.game.guild.channels.create(channelName, {
-		type: 'GUILD_TEXT',
-		reason: 'Player joined world',
-	})
-	channel.setParent(world.categoryChannelId);
-	let everyoneRole = global.game.guild.roles.everyone;
-	channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
-	channel.permissionOverwrites.edit(user.id, { VIEW_CHANNEL: true });
-	console.log('Created new channel: '+channelName);
 
 	// Create persisted player
 	let player = new Player({
@@ -104,12 +99,12 @@ Player.create = async function(world, user){
 		username: user.username,
 		discordId: user.id,
 		playerId: playerId,
-		channelId: channel.id,
 		room: world.rooms[0]
 	});
 
 	// Create and hook up actual player object
 	return player.save().then(async result => {
+		player.getChannel();
 		world.players.push(player);
 		await world.save();
 		console.log('Player successfully joined world!');
@@ -124,9 +119,9 @@ Player.create = async function(world, user){
 }
 
 Player.load = async function(world){
-	let players = await world.populate('players');
-	for(const player of players){
-		world.getChannel();
+	await world.populate('players');
+	for(const player of world.players){
+		player.getChannel();
 		console.log('Loaded player: '+player.username);
 	}
 	return true;
