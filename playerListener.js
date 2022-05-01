@@ -11,8 +11,15 @@ const playerListener = async function(message){
 	// If so, execute as a command
 	let cmd = message.content.trim();
 	let args=cmd.split(' ');
+	// Speechify and actionify
+	if (message.content.substring(0, 1) == '"'){
+		let txt = message.content.substring(1).trim();
+		player.say(txt);
+	}else if(message.content.substring(0, 1) == '-'){
+		let txt = message.content.substring(1);
+		player.emote(txt);
 	// Simple, atomic commands
-	if('look'==cmd){
+	}else if('look'==cmd){
 		player.look();
 	}else if('go'==args[0]){
 		let room = await player.getRoom();

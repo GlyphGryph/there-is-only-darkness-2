@@ -69,6 +69,31 @@ playerSchema.methods.look = async function(){
 	});
 }
 
+playerSchema.methods.say = async function(message){
+	this.shapedBroadcast('You say "'+message+'"', this.name+' says "'+message+'"');
+}
+playerSchema.methods.emote = async function(message){
+	this.unshapedBroadcast("*"+this.name+message+"*");
+}
+
+playerSchema.methods.shapedBroadcast = async function(personalMessage, otherMessage){
+	let otherPlayers = await Player.find({room: this.room._id, _id: {$ne: this._id}});
+	this.getChannel().then(async channel => {
+		channel.send(personalMessage);
+	});
+	otherPlayers.forEach(player=>{
+			player.getChannel().then(async channel => {
+				channel.send(otherMessage);
+			});
+	});
+}
+playerSchema.methods.unshapedBroadcast = async function(message){
+	let players = await Player.find({room: this.room._id});
+	this.getChannel().then(async channel => {
+		channel.send(message);
+	});
+}
+
 playerSchema.methods.moveTo = async function(newRoom, method, direction){
 	let oldRoomPlayers = await Player.find({room: this.room._id, _id: {$ne: this._id}});
 	this.room = newRoom;
