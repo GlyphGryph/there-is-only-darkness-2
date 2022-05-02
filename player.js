@@ -76,6 +76,16 @@ playerSchema.methods.look = async function(){
 	});
 }
 
+playerSchema.methods.findInInventory = async function(targetName){
+	let type = 'none';
+	let found = this.items.find(item=>{return item.name.toLowerCase()==targetName.toLowerCase();});
+	if(found){
+		type = 'Item';
+	}
+	
+	return {type: type, value: found};
+}
+
 playerSchema.methods.description = function(){
 	let textSoFar = "Name: "+this.name;
 	if(this.items.length > 0){
