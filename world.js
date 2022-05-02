@@ -99,7 +99,11 @@ World.create = async function(){
 		console.log(err);
 		throw(err);
 	});
-	let room2 = await new Room({description: 'The world of light and shadow.', exits:[]}).save().then(room => {
+	let room2 = await new Room({
+		description: 'The world of light and shadow.',
+		exits:[],
+		items:[{name: 'stick', description: 'A sticky stick.'}]
+	}).save().then(room => {
 		world.rooms.push(room)
 		return room;
 	}).catch(err => {

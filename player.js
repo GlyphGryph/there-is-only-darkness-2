@@ -2,6 +2,7 @@ const { Permissions } = require('discord.js');
 const mongoose = require('mongoose');
 const World = require('./world.js');
 const Schema = mongoose.Schema;
+const itemSchema = require('./itemSchema');
 
 const playerSchema = new Schema({
 	world: {
@@ -18,6 +19,7 @@ const playerSchema = new Schema({
 		ref: "Room",
 		required: true
 	},
+	items: [itemSchema]
 });
 
 playerSchema.methods.getChannel = async function(){
@@ -64,9 +66,24 @@ playerSchema.methods.look = async function(){
 			console.log(playerNames);
 			textSoFar += playerNames.join(", ");
 		}
-		
+		textSoFar += '\n---\n';
+		if(('undefined' != typeof this.room.items) && this.room.items.length > 0){
+			textSoFar += 'Items: '+this.room.items.map(item =>{return item.name}).join(', ');
+		}else{
+			textSoFar += 'There are no items here.';
+		}
 		channel.send(textSoFar);
 	});
+}
+
+playerSchema.methods.description = function(){
+	let textSoFar = "Name: "+this.name;
+	if(this.items.length > 0){
+		textSoFar += "\nItems: "+this.items.map(item => {
+			return item.name;
+		}).join(", ");
+	}
+	return textSoFar;
 }
 
 playerSchema.methods.say = async function(message){

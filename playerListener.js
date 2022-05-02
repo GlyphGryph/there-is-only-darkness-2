@@ -1,5 +1,6 @@
 const { Permissions } = require('discord.js');
 const Player = require('./player.js');
+const Actions = require('./actions.js');
 
 const playerListener = async function(message){
 	// Is this message on a player channel by the channel's associated player?
@@ -19,8 +20,15 @@ const playerListener = async function(message){
 		let txt = message.content.substring(1);
 		player.emote(txt);
 	// Simple, atomic commands
-	}else if('look'==cmd){
-		player.look();
+	}else if('look'==args[0]){
+		if(!args[1]){
+			player.look();
+		}else{
+			Actions.lookAt(player, args.slice(1).join(" "));
+		}
+	// The debug command, for whatever I'm currently testing
+	}else if('debug'==cmd){
+		Actions.debug(player);
 	}else if('go'==args[0]){
 		let room = await player.getRoom();
 		chosenExit = await room.getExit(args[1]);
