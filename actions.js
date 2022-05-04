@@ -25,7 +25,7 @@ const Actions = {
 			);
 		}else{
 			player.getChannel().then(async channel => {
-				channel.send("You don't see an item by that name here.");
+				channel.send("You aren't holding that.");
 			});
 		}
 	},
@@ -46,20 +46,54 @@ const Actions = {
 			});
 		}
 	},
+	inventory: async function(player){
+		let itemList = player.items.map(item=>{ return item.name}).join(', ');
+		player.getChannel().then(async channel => {
+			if(itemList){
+				channel.send("Your items: "+itemList);
+			}else{
+				channel.send("You are carrying nothing.");
+			}
+		});
+	},
+	items: async function(player){
+		await player.populate('room');
+		let room = player.room;
+		let players = await Player.find({room: player.room});
+		let itemList = "On floor: ";
+		if(room.items && room.items.length > 0){
+			let roomItems = room.items.map(item=>{ return item.name}).join(', ');
+			itemList += roomItems;
+		}else{
+			itemList += "There's nothing here."
+		}
+		players.forEach(player =>{
+			itemList += "\n\n"+player.name+": ";
+			let playerItems = player.items.map(item=>{ return item.name}).join(', ');
+			if(playerItems){
+				itemList += playerItems;
+			}else{
+				itemList += "Carrying nothing."
+			}
+		});
+		player.getChannel().then(async channel => {
+			channel.send(itemList);
+		});
+	},
 	lookAt: async function(player, targetName){
 		await player.populate('room');
+		let found;
 		if('self' == targetName){
 			found = {
 				type: 'Player',
 				value: player
 			}
 		}else{
-			let found = await player.room.findIn(targetName);
+			found = await player.room.findIn(targetName);
 		}
 		if('none' == found.type){
 			found = await player.findInInventory(targetName);
 		}
-		
 		
 		if('Player' == found.type){
 			// TODO: This should eventually be different for yourself, those in your tribe, and strangers.

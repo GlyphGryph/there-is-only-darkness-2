@@ -22,6 +22,10 @@ const playerListener = async function(message){
 		let txt = message.content.substring(1);
 		player.emote(txt);
 	// Simple, atomic commands
+	}else if('inv'==base || 'inventory'==base){
+		Actions.inventory(player);
+	}else if('items'==base){
+		Actions.items(player);
 	}else if('look'==base){
 		if(options){
 			Actions.lookAt(player, options);
