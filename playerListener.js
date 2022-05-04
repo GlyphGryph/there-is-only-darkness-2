@@ -10,8 +10,10 @@ const playerListener = async function(message){
 	}
 	
 	// If so, execute as a command
-	let cmd = message.content.trim();
-	let args=cmd.split(' ');
+	let command = message.content.trim();
+	let args=command.split(' ');
+	let base = args[0];
+	let options = args.slice(1).join(" ");
 	// Speechify and actionify
 	if (message.content.substring(0, 1) == '"'){
 		let txt = message.content.substring(1).trim();
@@ -20,26 +22,33 @@ const playerListener = async function(message){
 		let txt = message.content.substring(1);
 		player.emote(txt);
 	// Simple, atomic commands
-	}else if('look'==args[0]){
-		if(!args[1]){
-			player.look();
+	}else if('look'==base){
+		if(options){
+			Actions.lookAt(player, options);
 		}else{
-			Actions.lookAt(player, args.slice(1).join(" "));
+			player.look();
 		}
 	// The debug command, for whatever I'm currently testing
-	}else if('debug'==cmd){
+	}else if('debug'==command){
 		Actions.debug(player);
-	}else if('go'==args[0]){
+	// Complex, multi-part commands
+	}else if('get'==base){
+		if(options){
+			Actions.get(player, options);
+		}else{
+			message.channel.send('Get what?');
+		}
+	}else if('go'==base){
 		let room = await player.getRoom();
-		chosenExit = await room.getExit(args[1]);
+		chosenExit = await room.getExit(options);
 		if(!!chosenExit){
 			await player.moveTo(chosenExit.to, 'move', chosenExit.name);
 			player.look();
 		} else {
-			message.channel.send(args[1]+' is not a valid exit.');
+			message.channel.send(options+' is not a valid exit.');
 		}
 	}else{
-		message.channel.send('Command "'+cmd+'" not recognized');
+		message.channel.send('Command "'+command+'" not recognized');
 	}
 	
 	return true;

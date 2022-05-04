@@ -55,6 +55,17 @@ roomSchema.methods.findIn = async function(targetName){
 	return {type: type, value: found};
 };
 
+roomSchema.methods.removeItem = async function(item){
+	index = this.items.indexOf(item);
+	if(index >= 0){
+		this.items.splice(index, 1);
+		await this.save();
+		return true;
+	} else {
+		return false;
+	}
+}
+
 const Room = mongoose.model('Room', roomSchema);
 
 module.exports = Room;

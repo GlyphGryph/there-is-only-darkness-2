@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const World = require('./world.js');
 const Schema = mongoose.Schema;
 const itemSchema = require('./itemSchema');
+const Broadcast = require('./Broadcast');
 
 const playerSchema = new Schema({
 	world: {
@@ -21,6 +22,12 @@ const playerSchema = new Schema({
 	},
 	items: [itemSchema]
 });
+
+playerSchema.methods.addItem = async function(item){
+	this.items.push(item);
+	await this.save();
+	return false;
+}
 
 playerSchema.methods.getChannel = async function(){
 	let channel = await global.game.client.channels.fetch(this.channelId).catch(async err => {
@@ -97,28 +104,10 @@ playerSchema.methods.description = function(){
 }
 
 playerSchema.methods.say = async function(message){
-	this.shapedBroadcast('You say "'+message+'"', this.name+' says "'+message+'"');
+	Broadcast.shaped('You say "'+message+'"', this.name+' says "'+message+'"');
 }
 playerSchema.methods.emote = async function(message){
-	this.unshapedBroadcast("*"+this.name+message+"*");
-}
-
-playerSchema.methods.shapedBroadcast = async function(personalMessage, otherMessage){
-	let otherPlayers = await Player.find({room: this.room._id, _id: {$ne: this._id}});
-	this.getChannel().then(async channel => {
-		channel.send(personalMessage);
-	});
-	otherPlayers.forEach(player=>{
-			player.getChannel().then(async channel => {
-				channel.send(otherMessage);
-			});
-	});
-}
-playerSchema.methods.unshapedBroadcast = async function(message){
-	let players = await Player.find({room: this.room._id});
-	this.getChannel().then(async channel => {
-		channel.send(message);
-	});
+	Broadcast.unshaped("*"+this.name+message+"*");
 }
 
 playerSchema.methods.moveTo = async function(newRoom, method, direction){
