@@ -13,7 +13,21 @@ const Actions = {
 		});
 	},
 	drop: async function(player, targetName){
-		let items = await player.items;
+		await player.populate('room');
+		let found = await player.findInInventory(targetName);
+		if('Item' == found.type){
+			if(await player.removeItem(found.value)){
+				await player.room.addItem(found.value);
+			}
+			Broadcast.shaped(player.room, player,
+				"You dropped the "+found.value.name+".",
+				player.name+" dropped the "+found.value.name+"."
+			);
+		}else{
+			player.getChannel().then(async channel => {
+				channel.send("You don't see an item by that name here.");
+			});
+		}
 	},
 	get: async function(player, targetName){
 		await player.populate('room');
@@ -24,7 +38,7 @@ const Actions = {
 			}
 			Broadcast.shaped(player.room, player,
 				"You picked up the "+found.value.name+".",
-				player.name+" picked up the "+player.item
+				player.name+" picked up the "+found.value.name+"."
 			);
 		}else{
 			player.getChannel().then(async channel => {

@@ -55,6 +55,12 @@ roomSchema.methods.findIn = async function(targetName){
 	return {type: type, value: found};
 };
 
+roomSchema.methods.addItem = async function(item){
+	this.items.push(item);
+	await this.save();
+	return false;
+}
+
 roomSchema.methods.removeItem = async function(item){
 	index = this.items.indexOf(item);
 	if(index >= 0){

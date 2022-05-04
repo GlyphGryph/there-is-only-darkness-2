@@ -29,6 +29,17 @@ playerSchema.methods.addItem = async function(item){
 	return false;
 }
 
+playerSchema.methods.removeItem = async function(item){
+	index = this.items.indexOf(item);
+	if(index >= 0){
+		this.items.splice(index, 1);
+		await this.save();
+		return true;
+	} else {
+		return false;
+	}
+}
+
 playerSchema.methods.getChannel = async function(){
 	let channel = await global.game.client.channels.fetch(this.channelId).catch(async err => {
 		console.log('Channel for '+this.name+' not found, creating channel.');

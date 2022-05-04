@@ -38,6 +38,12 @@ const playerListener = async function(message){
 		}else{
 			message.channel.send('Get what?');
 		}
+	}else if('drop'==base){
+		if(options){
+			Actions.drop(player, options);
+		}else{
+			message.channel.send('Drop what?');
+		}
 	}else if('go'==base){
 		let room = await player.getRoom();
 		chosenExit = await room.getExit(options);
