@@ -30,7 +30,7 @@ const playerListener = async function(message){
 		if(options){
 			Actions.lookAt(player, options);
 		}else{
-			player.look();
+			Actions.look(player);
 		}
 	// The debug command, for whatever I'm currently testing
 	}else if('debug'==command){

@@ -69,31 +69,6 @@ playerSchema.methods.destroy = async function(){
 	this.getChannel().then(channel=>{ channel.delete()});
 };
 
-playerSchema.methods.look = async function(){
-	await this.populate('room');
-	let players = await Player.find({room: this.room._id, _id:{$ne: this._id}});
-	this.getChannel().then(async channel => {
-		let textSoFar = this.room.description;
-		textSoFar += '\n---\n';
-		let exitsDescription = await this.room.getExitsDescription();
-		textSoFar += exitsDescription;
-		if(players.length > 0){ 
-			textSoFar += '\n---\nOther players at this location: ';
-			console.log(players);
-			let playerNames = players.map(player=>{return player.name});
-			console.log(playerNames);
-			textSoFar += playerNames.join(", ");
-		}
-		textSoFar += '\n---\n';
-		if(('undefined' != typeof this.room.items) && this.room.items.length > 0){
-			textSoFar += 'Items: '+this.room.items.map(item =>{return item.name}).join(', ');
-		}else{
-			textSoFar += 'There are no items here.';
-		}
-		channel.send(textSoFar);
-	});
-}
-
 playerSchema.methods.findInInventory = async function(targetName){
 	let type = 'none';
 	let found = this.items.find(item=>{return item.name.toLowerCase()==targetName.toLowerCase();});

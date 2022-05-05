@@ -6,10 +6,11 @@ const Actions = {
 	debug: async function(player){
 		console.log('Adding item');
 		await player.populate('room');
-		player.items.push({name: 'rock', description: 'A rocky rock'});
-		player.save();
+		
+		await player.room.addScaffold('stickman');
+		await player.room.addBuilding('rockpile');
 		player.getChannel().then(async channel => {
-			channel.send('Added item');
+			channel.send('Added buildings');
 		});
 	},
 	drop: async function(player, targetName){
@@ -78,6 +79,47 @@ const Actions = {
 		});
 		player.getChannel().then(async channel => {
 			channel.send(itemList);
+		});
+	},
+	look: async function(player){
+		await player.populate('room');
+		let room = player.room;
+		let otherPlayers = await Player.find({room: room._id, _id:{$ne: player._id}});
+		player.getChannel().then(async channel => {
+			//Description
+			let textSoFar = room.description;
+			textSoFar += '\n---\n';
+			// Buildings
+			if(room.buildings && room.buildings.length > 0){
+				textSoFar += 'Buildings: '+room.buildings.map(building =>{return building.getName()}).join(', ')+'\n';
+			}
+			// Buildings
+			if(room.scaffolds && room.scaffolds.length > 0){
+				textSoFar += 'Buildings in progress: '+room.scaffolds.map(scaffold =>{return scaffold.getName()}).join(', ')+'\n';
+			}
+			if(room.scaffolds && room.scaffolds.length > 0 && room.buildings && room.buildings.length > 0){
+				textSoFar +='---\n';
+			}
+			
+			// Exits
+			let exitsDescription = await room.getExitsDescription();
+			textSoFar += exitsDescription;
+			//Players
+			if(otherPlayers.length > 0){ 
+				textSoFar += '\n---\nOther players at this location: ';
+				console.log(otherPlayers);
+				let playerNames = otherPlayers.map(player=>{return player.name});
+				console.log(playerNames);
+				textSoFar += playerNames.join(", ");
+			}
+			textSoFar += '\n---\n';
+			//Items
+			if(room.items && room.items.length > 0){
+				textSoFar += 'Items: '+room.items.map(item =>{return item.name}).join(', ');
+			}else{
+				textSoFar += 'There are no items here.';
+			}
+			channel.send(textSoFar);
 		});
 	},
 	lookAt: async function(player, targetName){

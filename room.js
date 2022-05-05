@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const itemSchema = require('./itemSchema');
-const Player = require('./player.js');
+const Player = require('./player');
+const buildingTemplates = require('./buildingTemplates');
+const {buildingSchema, scaffoldSchema} = require('./buildingSchema');
 
 const roomSchema = new Schema({
 	description: String,
@@ -9,12 +11,48 @@ const roomSchema = new Schema({
 		to: {type: Schema.Types.ObjectId, ref: "Room"},
 		name: String,
 	}],
+	buildings: [buildingSchema],
+	scaffolds: [scaffoldSchema],
 	items: [itemSchema]
 });
+
+roomSchema.methods.addBuilding = async function(key){
+	this.buildings ||= [];
+	this.buildings.push({key: key, progress: 0})
+	return this.save();
+};
+
+roomSchema.methods.addItem = async function(item){
+	this.items.push(item);
+	await this.save();
+	return false;
+};
+
+roomSchema.methods.addScaffold = async function(key){
+	this.scaffolds ||= [];
+	this.scaffolds.push({key: key, progress: 0})
+	return this.save();
+};
 
 roomSchema.methods.destroy = async function(){
 	await Room.deleteOne(this);
 	return true;
+};
+
+roomSchema.methods.findIn = async function(targetName){
+	let type = 'none';
+	console.log(this.items);
+	let found = this.items.find(item=>{return item.name.toLowerCase()==targetName.toLowerCase();});
+	if(found){
+		type = 'Item';
+	}else{
+		found = await Player.findOne({room: this, name: new RegExp("^"+targetName, "i")});
+		if(found){
+			type = 'Player';
+		}
+	}
+	
+	return {type: type, value: found};
 };
 
 roomSchema.methods.getExit = function(name){
@@ -39,27 +77,16 @@ roomSchema.methods.getExitsDescription = async function(){
 	}
 };
 
-roomSchema.methods.findIn = async function(targetName){
-	let type = 'none';
-	console.log(this.items);
-	let found = this.items.find(item=>{return item.name.toLowerCase()==targetName.toLowerCase();});
-	if(found){
-		type = 'Item';
-	}else{
-		found = await Player.findOne({room: this, name: new RegExp("^"+targetName, "i")});
-		if(found){
-			type = 'Player';
-		}
+roomSchema.methods.removeBuilding = async function(building){
+	index = this.buildings.indexOf(building);
+	if(index >= 0){
+		this.buildings.splice(index, 1);
+		await this.save();
+		return true;
+	} else {
+		return false;
 	}
-	
-	return {type: type, value: found};
 };
-
-roomSchema.methods.addItem = async function(item){
-	this.items.push(item);
-	await this.save();
-	return false;
-}
 
 roomSchema.methods.removeItem = async function(item){
 	index = this.items.indexOf(item);
@@ -70,7 +97,18 @@ roomSchema.methods.removeItem = async function(item){
 	} else {
 		return false;
 	}
-}
+};
+
+roomSchema.methods.removeScaffold = async function(scaffold){
+	index = this.items.indexOf(scaffold);
+	if(index >= 0){
+		this.scaffolds.splice(index, 1);
+		await this.save();
+		return true;
+	} else {
+		return false;
+	}
+};
 
 const Room = mongoose.model('Room', roomSchema);
 
