@@ -14,11 +14,11 @@ const scaffoldSchema = new Schema({
 });
 
 buildingSchema.methods.getName = function(){
-	return buildingTemplates[this.key].name
+	return buildingTemplates.get(this.key).name
 };
 
 scaffoldSchema.methods.getName = function(){
-	return buildingTemplates[this.key].name
+	return buildingTemplates.get(this.key).name
 };
 
 exports.buildingSchema = buildingSchema;

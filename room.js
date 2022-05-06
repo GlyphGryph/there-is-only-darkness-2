@@ -42,7 +42,7 @@ roomSchema.methods.destroy = async function(){
 roomSchema.methods.findIn = async function(targetName){
 	let type = 'none';
 	console.log(this.items);
-	let found = this.items.find(item=>{return item.name.toLowerCase()==targetName.toLowerCase();});
+	let found = this.items.find(item=>{return item.name.toLowerCase()==targetName;});
 	if(found){
 		type = 'Item';
 	}else{

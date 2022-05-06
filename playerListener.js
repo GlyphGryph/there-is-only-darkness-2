@@ -10,7 +10,7 @@ const playerListener = async function(message){
 	}
 	
 	// If so, execute as a command
-	let command = message.content.trim();
+	let command = message.content.trim().toLowerCase();
 	let args=command.split(' ');
 	let base = args[0];
 	let options = args.slice(1).join(" ");
@@ -36,17 +36,21 @@ const playerListener = async function(message){
 	}else if('debug'==command){
 		Actions.debug(player);
 	// Complex, multi-part commands
-	}else if('get'==base){
-		if(options){
-			Actions.get(player, options);
-		}else{
-			message.channel.send('Get what?');
-		}
+	}else if('consider'==base){
+		let category = args[1];
+		let target = args.slice(2).join(" ");
+		Actions.consider(player, category, target);	
 	}else if('drop'==base){
 		if(options){
 			Actions.drop(player, options);
 		}else{
 			message.channel.send('Drop what?');
+		}
+	}else if('get'==base){
+		if(options){
+			Actions.get(player, options);
+		}else{
+			message.channel.send('Get what?');
 		}
 	}else if('go'==base){
 		let room = await player.getRoom();
