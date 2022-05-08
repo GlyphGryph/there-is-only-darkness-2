@@ -4,7 +4,7 @@ buildingTemplates.set('stickman', {
 	name: "Stick Man",
 	description: "A man made of sticks",
 	baseDurability: 10,
-	workToComplete: 100
+	workToComplete: 5
 });
 buildingTemplates.set('rockpile', {
 	id: 'rockpile',

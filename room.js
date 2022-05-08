@@ -50,10 +50,19 @@ roomSchema.methods.findIn = async function(targetName){
 		if(found){
 			type = 'Player';
 		}
+		// TODO: Add building support
 	}
 	
 	return {type: type, value: found};
 };
+
+roomSchema.methods.findInBuildings = async function(targetName){
+	return this.buildings.find(building=>{return building.getName().toLowerCase()==targetName;});
+}
+
+roomSchema.methods.findInScaffolds = async function(targetName){
+	return this.scaffolds.find(scaffold=>{return scaffold.getName().toLowerCase()==targetName;});
+}
 
 roomSchema.methods.getExit = function(name){
 	found = this.exits.find(exit => {
@@ -77,32 +86,10 @@ roomSchema.methods.getExitsDescription = async function(){
 	}
 };
 
-roomSchema.methods.removeBuilding = async function(building){
-	index = this.buildings.indexOf(building);
-	if(index >= 0){
-		this.buildings.splice(index, 1);
-		await this.save();
-		return true;
-	} else {
-		return false;
-	}
-};
-
 roomSchema.methods.removeItem = async function(item){
 	index = this.items.indexOf(item);
 	if(index >= 0){
 		this.items.splice(index, 1);
-		await this.save();
-		return true;
-	} else {
-		return false;
-	}
-};
-
-roomSchema.methods.removeScaffold = async function(scaffold){
-	index = this.items.indexOf(scaffold);
-	if(index >= 0){
-		this.scaffolds.splice(index, 1);
 		await this.save();
 		return true;
 	} else {

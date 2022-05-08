@@ -36,6 +36,8 @@ const playerListener = async function(message){
 	}else if('debug'==command){
 		Actions.debug(player);
 	// Complex, multi-part commands
+	}else if('build'==base){
+		Actions.build(player, options);	
 	}else if('consider'==base){
 		let category = args[1];
 		let target = args.slice(2).join(" ");

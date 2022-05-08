@@ -4,6 +4,23 @@ const Player = require('./player.js');
 const buildingTemplates = require('./buildingTemplates');
 
 const Actions = {
+	build: async function(player, targetName){
+		await player.populate('room');
+		let room = player.room;
+		let scaffold = await room.findInScaffolds(targetName);
+		let template = await buildingTemplates.findByName(targetName);
+		if(scaffold){
+			await scaffold.build(player);
+			return true;
+		} else {
+			await room.addScaffold(template.id);
+			Broadcast.shaped(player.room, player,
+				"You began work on a new "+template.name+".",
+				player.name+" began work on a new "+template.name+"."
+			);
+			await scaffold.build(player);
+		}
+	},
 	consider: async function(player, category, targetName){
 		if(!category){
 			Broadcast.personal(player, "You can consider various topics, like 'building', or details of those topics, like 'building Stick Man'");
@@ -107,7 +124,11 @@ const Actions = {
 		}
 		// Buildings
 		if(room.scaffolds && room.scaffolds.length > 0){
-			textSoFar += 'Buildings in progress: '+room.scaffolds.map(scaffold =>{return scaffold.getName()}).join(', ')+'\n';
+			textSoFar += 'Buildings in progress: '+room.scaffolds.map(scaffold =>{
+				let display = scaffold.getName();
+				display += " ("+scaffold.progress+"/"+scaffold.getTemplate().workToComplete+")"
+				return display;
+			}).join(', ')+'\n';
 		}
 		if(room.scaffolds && room.scaffolds.length > 0 && room.buildings && room.buildings.length > 0){
 			textSoFar +='---\n';
