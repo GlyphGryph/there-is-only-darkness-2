@@ -3,7 +3,8 @@ const config = require('./config.json');
 const Game = require('./game.js');
 const forgeListener = require('./forgeListener.js');
 const playerListener = require('./playerListener.js');
-const mongoose = require('mongoose');
+var mysql = require('mysql');
+
 
 //Initialize Discord Bot
 const client = new Client({
