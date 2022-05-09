@@ -1,5 +1,5 @@
-var World = require('./world.js');
-var Player = require('./player.js');
+var World = require('./models/world.js');
+var Player = require('./models/player.js');
 const config = require('./config.json');
 
 class Game{

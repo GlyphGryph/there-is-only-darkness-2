@@ -2,8 +2,14 @@ const {Client, Intents} = require('discord.js');
 const config = require('./config.json');
 const Game = require('./game.js');
 const forgeListener = require('./forgeListener.js');
-const playerListener = require('./playerListener.js');
-var mysql = require('mysql');
+//const playerListener = require('./playerListener.js');
+
+// Db/model stuff
+const knex = require('knex')
+const { Model } = require('objection')
+const knexConfig = require('./knexfile')
+const db = knex(knexConfig['development'])
+Model.knex(db)
 
 
 //Initialize Discord Bot
@@ -28,15 +34,10 @@ client.once('ready', async () => {
 	await global.game.load();
 });
 
-//Connect to Database and then login to client
-const dbURI='mongodb://127.0.0.1:27017/there_is_only_darkness'
-mongoose.connect(dbURI).then((result) =>{
-	console.log('Connected to MongoDB');
-	client.login(config.token);
-}).catch((err) => console.log(err));
-
 client.on('messageCreate', message => {
 	console.log('Received client message: '+message.content+' on '+message.channel.id);
 	forgeListener(message);
-	playerListener(message);
+	//playerListener(message);
 });
+
+client.login(config.token);

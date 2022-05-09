@@ -1,7 +1,6 @@
 const { Permissions } = require('discord.js');
-const mongoose = require('mongoose');
-const World = require('./world.js');
-const Player = require('./player.js');
+const World = require('./models/world.js');
+const Player = require('./models/player.js');
 
 const forgeListener = async function (message){
 	if(message.channel.id!=global.game.forgeChannel.id){
@@ -15,27 +14,29 @@ const forgeListener = async function (message){
 		if('ping'==cmd){
 			message.channel.send('I am alive.');
 		}else if('create world'==cmd){
+			message.channel.send('Creating world...');
 			World.create();
 		}else if('list worlds'==cmd){
 			World.list();
 		//Complex Commands
+		}else if('destroy'==args[0]){
+			let worldName = args.slice(1).join(' ');
+			let world = await World.query().findOne({name: worldName});
+			console.log(world);
+			if(!world){
+				message.reply('A world by the name '+worldName+' does not exist');
+			}else{
+				world.destroy();
+			}
 		}else if('join'==args[0]){
 			let worldName = args.slice(1).join(' ');
-			let world = await World.findOne({name: worldName});
-			if(null == world){
+			let world = await World.query().findOne({name: worldName});
+			if(!world){
 				message.reply('A world by the name '+worldName+' does not exist');
 			}else if(await world.hasUser(message.author.id)){
 				message.reply('You are already a part of that world.')
 			}else{ // World Found!
 				Player.create(world, message.author);
-			}
-		}else if('destroy'==args[0]){
-			let worldName = args.slice(1).join(' ');
-			let world = await World.findOne({name: worldName});
-			if(null == world){
-				message.reply('A world by the name '+worldName+' does not exist');
-			}else{
-				world.destroy();
 			}
 		}else{
 			message.reply('Command "'+cmd+'" not recognized');
