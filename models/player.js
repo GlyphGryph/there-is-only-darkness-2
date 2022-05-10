@@ -59,7 +59,6 @@ class Player extends BaseModel {
 				roomId: startingRoom.id,
 				inventory: {}
 			}).returning('*');
-			//TODO: Add inventory
 
 			player.getChannel();
 			console.log('Player successfully joined world!');
@@ -73,12 +72,12 @@ class Player extends BaseModel {
 	}
 
 	static async load(world){
-	/*	await world.populate('players');
-		for(const player of world.players){
+		let players = await world.$relatedQuery('players');
+		for(const player of players){
 			player.getChannel();
 			console.log('Loaded player: '+player.username);
 		}
-		return true;*/
+		return true;
 	}
 		
 	//*************
@@ -135,12 +134,13 @@ class Player extends BaseModel {
 			if(channel.parentId != categoryChannel.id){
 				await channel.setParent(categoryChannel.id);
 				let everyoneRole = await global.game.guild.roles.everyone;
+				let user = await global.game.guild.members.fetch({user: this.discordId});
 				console.log('DiscordId is '+this.discordId);
-				await channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false })
-				await channel.permissionOverwrites.edit(this.discordId, { VIEW_CHANNEL: true });
+				await channel.permissionOverwrites.edit(everyoneRole, { VIEW_CHANNEL: false });
+				await channel.permissionOverwrites.edit(user, { VIEW_CHANNEL: true });
 			}
 			this.channelId = channel.id;
-			this.$query().update();
+			await this.$query().update();
 			return channel;
 		});
 		return channel;

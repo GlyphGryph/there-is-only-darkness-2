@@ -1,6 +1,7 @@
 const BaseModel = require('./base_model');
 const { Model } = require('objection');
 const Room = require('./room');
+const Player = require('./player');
 
 class World extends BaseModel {
 	//*************
@@ -83,7 +84,7 @@ class World extends BaseModel {
 	}
 
 	static async load(){
-		/*const worlds = await World.find();
+		const worlds = await World.query();
 		for(const world of worlds){
 			world.getCategoryChannel();
 			console.log('Loaded world: '+world.name);
@@ -91,17 +92,17 @@ class World extends BaseModel {
 			Player.load(world);
 		}
 		World.list();
-		return true;*/
+		return true;
 	}
 
-	static async list(){/*
-		let worlds = await World.find();
+	static async list(){
+		let worlds = await World.query();
 		if(worlds.length > 0){
-			worldList = worlds.map(world =>{ return world.name });
+			let worldList = worlds.map(world =>{ return world.name });
 			global.game.forgeChannel.send('Worlds ('+worlds.length+'): '+worldList.join(', '));
 		} else {
 			global.game.forgeChannel.send('No worlds exist.');
-		}*/
+		}
 	}
 	 
 	//*************
@@ -140,7 +141,7 @@ class World extends BaseModel {
 				reason: 'World channel could not be found.'
 			});
 			this.categoryChannelId = channel.id;
-			await this.$query.update();
+			await this.$query().update();
 			return channel;
 		});
 		return categoryChannel;
