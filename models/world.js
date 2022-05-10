@@ -123,12 +123,8 @@ class World extends BaseModel {
 	}
 	
 	async hasUser(discordId){
-		/*let players = await this.populate('players');
-		console.log(this.players);
-		let found = this.players.find(player => {
-			return player.discordId == discordId;
-		});
-		return ('undefined' != typeof found);*/
+		let player = await this.$relatedQuery('players').findOne({discordId: discordId});
+		return !!player;
 	}
 	
 	async getCategoryChannel(){
