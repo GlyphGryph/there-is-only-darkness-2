@@ -101,8 +101,11 @@ class Player extends BaseModel {
 	}
 
 	async destroy(){
-		/*await Player.deleteOne(this);
-		this.getChannel().then(channel=>{ channel.delete()});*/
+		let inventory = await this.$relatedQuery('inventory');
+		await this.getChannel().then(channel=>{ channel.delete()});
+		await this.$query().delete();
+		await inventory.$query().delete();
+		
 	};
 	
 	async emote(message){

@@ -108,11 +108,11 @@ class World extends BaseModel {
 	//Instance Methods
 	//*************
 	async destroy(){
-		let players = await this.$relationQuery('players');
+		let players = await this.$relatedQuery('players');
 		for(const player of players){
-			player.destroy();
+			await player.destroy();
 		}
-		let rooms = await this.$relationQuery('rooms');
+		let rooms = await this.$relatedQuery('rooms');
 		for(const room of rooms){
 			room.destroy();
 		}

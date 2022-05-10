@@ -43,7 +43,7 @@ class Room extends BaseModel {
   }
 	
 	async destroy(){
-		return await this.$query.delete();
+		return await this.$query().delete();
 	};
 
 	/*
