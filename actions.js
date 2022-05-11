@@ -51,7 +51,6 @@ const Actions = {
 			description: template.description,
 			inventoryId: player.inventoryId
 		}).returning('*');
-		console.log(item);
 		/*await player.populate('room');
 		
 		await player.room.addScaffold('stickman');
@@ -59,13 +58,14 @@ const Actions = {
 		Broadcast.personal(player, 'Added buildings');*/
 	},
 	drop: async function(player, targetName){
-		let room = await player.$relatedQuery('room');
-		let found = await player.findInInventory(targetName);
-		let item = found.value
-		if('Item' == found.type){
-			item.inventoryId = await room.$relatedQuery('inventory').id;
-			item.$query.update();
-			Broadcast.shaped(room, player,
+		let item = await player.findInInventory(targetName);
+		if(item){
+			let room = await player.$relatedQuery('room');
+			item.inventoryId = room.inventoryId;
+			console.log(item);
+			await item.$query().update();
+			let otherPlayers = await Player.otherPlayers(player);
+			Broadcast.shaped(player, otherPlayers,
 				"You dropped the "+item.name+".",
 				player.name+" dropped the "+item.name+"."
 			);
@@ -74,15 +74,16 @@ const Actions = {
 		}
 	},
 	get: async function(player, targetName){
-		await player.populate('room');
-		let found = await player.room.findIn(targetName);
-		if('Item' == found.type){
-			if(await player.room.removeItem(found.value)){
-				await player.addItem(found.value);
-			}
-			Broadcast.shaped(player.room, player,
-				"You picked up the "+found.value.name+".",
-				player.name+" picked up the "+found.value.name+"."
+		let room = await player.$relatedQuery('room');
+		let item = await room.findInInventory(targetName);
+		if(item){
+			item.inventoryId = player.inventoryId;
+			console.log(item);
+			await item.$query().update();
+			let otherPlayers = await Player.otherPlayers(player);
+			Broadcast.shaped(player, otherPlayers,
+				"You picked up the "+item.name+".",
+				player.name+" picked up the "+item.name+"."
 			);
 		}else{
 			Broadcast.personal(player, "You don't see an item by that name here.");
@@ -119,13 +120,13 @@ const Actions = {
 		Broadcast.personal(player, itemList);
 	},
 	look: async function(player){
-		await player.populate('room');
-		let room = player.room;
-		let otherPlayers = await Player.find({room: room._id, _id:{$ne: player._id}});
+		let room = await player.$relatedQuery('room');
+		let otherPlayers = await Player.query().where({roomId: room.id}).whereNot({id: player.id});
 		//Description
 		let textSoFar = room.description;
 		textSoFar += '\n---\n';
 		// Buildings
+		/*let buildings = room.$relatedQuery('buildings');
 		if(room.buildings && room.buildings.length > 0){
 			textSoFar += 'Buildings: '+room.buildings.map(building =>{return building.getName()}).join(', ')+'\n';
 		}
@@ -139,7 +140,7 @@ const Actions = {
 		}
 		if(room.scaffolds && room.scaffolds.length > 0 && room.buildings && room.buildings.length > 0){
 			textSoFar +='---\n';
-		}
+		}*/
 		
 		// Exits
 		let exitsDescription = await room.getExitsDescription();
@@ -147,15 +148,14 @@ const Actions = {
 		//Players
 		if(otherPlayers.length > 0){ 
 			textSoFar += '\n---\nOther players at this location: ';
-			console.log(otherPlayers);
 			let playerNames = otherPlayers.map(player=>{return player.name});
-			console.log(playerNames);
 			textSoFar += playerNames.join(", ");
 		}
 		textSoFar += '\n---\n';
 		//Items
-		if(room.items && room.items.length > 0){
-			textSoFar += 'Items: '+room.items.map(item =>{return item.name}).join(', ');
+		let items = await room.$relatedQuery('items');
+		if(items && items.length > 0){
+			textSoFar += 'Items: '+items.map(item =>{return item.name}).join(', ');
 		}else{
 			textSoFar += 'There are no items here.';
 		}
@@ -177,9 +177,9 @@ const Actions = {
 		}
 		
 		if('Player' == found.type){
-			Broadcast.personal(player, found.value.description());
+			Broadcast.personal(player, await found.value.description());
 		}else if('Item' == found.type){
-			Broadcast.personal(player, found.value.description);
+			Broadcast.personal(player, await found.value.description());
 		}else{
 			Broadcast.personal(player, "You don't see anything by that name here.");
 		}

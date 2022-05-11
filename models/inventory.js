@@ -20,7 +20,7 @@ class Inventory extends BaseModel {
         join: {
           from: 'inventories.id',
           to: 'rooms.inventoryId',
-        },
+        }
       },
 			player: {
 				relation: Model.HasOneRelation,

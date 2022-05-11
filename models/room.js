@@ -13,6 +13,8 @@ class Room extends BaseModel {
     const World = require('./world');
     const Player = require('./player');
 		const Inventory = require('./inventory');
+		const Item = require('./item');
+		const Exit = require('./exit');
 
     return {
       world: {
@@ -31,6 +33,14 @@ class Room extends BaseModel {
 					to: 'players.roomId'
 				}
 			},
+			exits: {
+				relation: Model.HasManyRelation,
+				modelClass: Exit,
+				join: {
+					from: 'rooms.id',
+					to: 'exits.sourceId'
+				}
+			},
 			inventory: {
 				relation: Model.BelongsToOneRelation,
 				modelClass: Inventory,
@@ -45,12 +55,13 @@ class Room extends BaseModel {
 				join: {
 					from: 'rooms.inventoryId',
 					through: {
-						from: 'inventory.id',
-						to: 'inventory.id'
+						from: 'inventories.id',
+						to: 'inventories.id'
 					},
 					to: 'items.inventoryId'
 				}
-			}
+			},
+			
     }
   }
 	
@@ -58,26 +69,30 @@ class Room extends BaseModel {
 		return await this.$query().delete();
 	};
 
-	/*
-	roomSchema.methods.addBuilding = async function(key){
+	
+	/*async addBuilding(key){
 		this.buildings ||= [];
 		this.buildings.push({key: key, progress: 0})
 		return this.save();
-	};
+	};*/
 
-	roomSchema.methods.addItem = async function(item){
+	async addItem(item){
 		this.items.push(item);
 		await this.save();
 		return false;
 	};
 
-	roomSchema.methods.addScaffold = async function(key){
+	/*async addScaffold(key){
 		this.scaffolds ||= [];
 		this.scaffolds.push({key: key, progress: 0})
 		return this.save();
 	};*/
+	
+	async findInInventory(targetName){
+		return await this.$relatedQuery('items').findOne('name', 'ilike', targetName);
+	}
 
-	roomSchema.methods.findIn = async function(targetName){
+	async findIn(targetName){
 		let type = 'none';
 		console.log(this.items);
 		let items = await this.$relatedQuery('items');
@@ -85,7 +100,8 @@ class Room extends BaseModel {
 		if(found){
 			type = 'Item';
 		}else{
-			found = await Player.findOne({room: this, name: new RegExp("^"+targetName+"$", "i")});
+			players = room.$relatedQuery('players').findOne('name', 'ilike', targetName)
+			await Player.findOne({room: this, name: new RegExp("^"+targetName+"$", "i")});
 			if(found){
 				type = 'Player';
 			}
@@ -95,15 +111,15 @@ class Room extends BaseModel {
 		return {type: type, value: found};
 	};
 /*
-	roomSchema.methods.findInBuildings = async function(targetName){
+	async findInBuildings(targetName){
 		return this.buildings.find(building=>{return building.getName().toLowerCase()==targetName;});
 	}
 
-	roomSchema.methods.findInScaffolds = async function(targetName){
+	async findInScaffolds(targetName){
 		return this.scaffolds.find(scaffold=>{return scaffold.getName().toLowerCase()==targetName;});
 	}
 
-	roomSchema.methods.getExit = function(name){
+	async getExit(name){
 		found = this.exits.find(exit => {
 			return exit.name == name;
 		});
@@ -113,9 +129,11 @@ class Room extends BaseModel {
 			return found;
 		}
 	};
+*/
 
-	roomSchema.methods.getExitsDescription = async function(){
-		let exitNames = this.exits.map(exit => {
+	async getExitsDescription(){
+		let exits = await this.$relatedQuery('exits');
+		let exitNames = exits.map(exit => {
 			return exit.name;
 		});
 		if(exitNames.length > 0){
@@ -125,7 +143,8 @@ class Room extends BaseModel {
 		}
 	};
 
-	roomSchema.methods.removeItem = async function(item){
+/*
+	async removeItem(item){
 		index = this.items.indexOf(item);
 		if(index >= 0){
 			this.items.splice(index, 1);

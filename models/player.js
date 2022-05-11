@@ -47,8 +47,8 @@ class Player extends BaseModel {
 				join: {
 					from: 'players.inventoryId',
 					through: {
-						from: 'inventory.id',
-						to: 'inventory.id'
+						from: 'inventories.id',
+						to: 'inventories.id'
 					},
 					to: 'items.inventoryId'
 				}
@@ -93,19 +93,17 @@ class Player extends BaseModel {
 		}
 		return true;
 	}
+	
+	static async otherPlayers(player){
+		return await Player.query().where({roomId: player.roomId}).whereNot({id: player.id});
+	}
 		
 	//*************
 	//Instance Methods
 	//*************
-	async addItem(item){
-		item.inventoryId = this.inventoryId;
-		item.update();
-		return false;
-	}
-
-	description(){
+	async description(){
 		let textSoFar = "Name: "+this.name;
-		let items = this.$relatedQuery('items');
+		let items = await this.$relatedQuery('items');
 		if(items.length > 0){
 			textSoFar += "\nItems: "+items.map(item => {
 				return item.name;
@@ -127,15 +125,7 @@ class Player extends BaseModel {
 	}
 
 	async findInInventory(targetName){
-		let type = 'none';
-		let items = await this.$relatedQuery('items');
-		//TODO: Turn this into an ilike query
-		let found = items.find(item=>{return item.name.toLowerCase()==targetName.toLowerCase();});
-		if(found){
-			type = 'Item';
-		}
-		
-		return {type: type, value: found};
+		return await this.$relatedQuery('items').findOne('name', 'ilike', targetName);
 	}
 
 	async getChannel(){
@@ -196,7 +186,7 @@ class Player extends BaseModel {
 	}
 	
 	async say(message){
-		let otherPlayers = await Player.query().where({roomId: this.roomId}).whereNot({id: this.id});
+		let otherPlayers = await Player.otherPlayers(this);
 		Broadcast.shaped(this, otherPlayers, 'You say "'+message+'"', this.name+' says "'+message+'"');
 	}
 }
