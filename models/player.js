@@ -1,5 +1,6 @@
 const BaseModel = require('./base_model');
 const { Model } = require('objection');
+const Broadcast = require('../broadcast');
 
 class Player extends BaseModel {
 	//*************
@@ -13,6 +14,7 @@ class Player extends BaseModel {
     const World = require('./world');
     const Room = require('./room.js');
 		const Inventory = require('./inventory');
+		const Item = require('./item');
 
     return {
       world: {
@@ -37,6 +39,18 @@ class Player extends BaseModel {
 				join: {
 					from: 'players.inventoryId',
 					to: 'inventories.id'
+				}
+			},
+			items: {
+				relation: Model.ManyToManyRelation,
+				modelClass: Item,
+				join: {
+					from: 'players.inventoryId',
+					through: {
+						from: 'inventory.id',
+						to: 'inventory.id'
+					},
+					to: 'items.inventoryId'
 				}
 			}
     }
@@ -84,19 +98,20 @@ class Player extends BaseModel {
 	//Instance Methods
 	//*************
 	async addItem(item){
-		/*this.items.push(item);
-		await this.save();
-		return false;*/
+		item.inventoryId = this.inventoryId;
+		item.update();
+		return false;
 	}
 
 	description(){
-		/*let textSoFar = "Name: "+this.name;
-		if(this.items.length > 0){
-			textSoFar += "\nItems: "+this.items.map(item => {
+		let textSoFar = "Name: "+this.name;
+		let items = this.$relatedQuery('items');
+		if(items.length > 0){
+			textSoFar += "\nItems: "+items.map(item => {
 				return item.name;
 			}).join(", ");
 		}
-		return textSoFar;*/
+		return textSoFar;
 	}
 
 	async destroy(){
@@ -104,21 +119,23 @@ class Player extends BaseModel {
 		await this.getChannel().then(channel=>{ channel.delete()});
 		await this.$query().delete();
 		await inventory.$query().delete();
-		
 	};
 	
 	async emote(message){
-		Broadcast.unshaped("*"+this.name+message+"*");
+		let players = await Player.query().where({roomId: this.roomId});
+		Broadcast.unshaped(players, "*"+this.name+message+"*");
 	}
 
 	async findInInventory(targetName){
-		/*let type = 'none';
-		let found = this.items.find(item=>{return item.name.toLowerCase()==targetName.toLowerCase();});
+		let type = 'none';
+		let items = await this.$relatedQuery('items');
+		//TODO: Turn this into an ilike query
+		let found = items.find(item=>{return item.name.toLowerCase()==targetName.toLowerCase();});
 		if(found){
 			type = 'Item';
 		}
 		
-		return {type: type, value: found};*/
+		return {type: type, value: found};
 	}
 
 	async getChannel(){
@@ -145,11 +162,6 @@ class Player extends BaseModel {
 		});
 		return channel;
 	};
-
-	async getRoom(){
-		/*await this.populate('room');
-		return this.room;*/
-	}
 
 	async moveTo(newRoom, method, direction){
 		/*let oldRoomPlayers = await Player.find({room: this.room._id, _id: {$ne: this._id}});
@@ -182,20 +194,10 @@ class Player extends BaseModel {
 		});
 		return await this.save();*/
 	}
-
-	async removeItem(item){
-		/*index = this.items.indexOf(item);
-		if(index >= 0){
-			this.items.splice(index, 1);
-			await this.save();
-			return true;
-		} else {
-			return false;
-		}*/
-	}
 	
 	async say(message){
-		Broadcast.shaped('You say "'+message+'"', this.name+' says "'+message+'"');
+		let otherPlayers = await Player.query().where({roomId: this.roomId}).whereNot({id: this.id});
+		Broadcast.shaped(this, otherPlayers, 'You say "'+message+'"', this.name+' says "'+message+'"');
 	}
 }
 

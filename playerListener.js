@@ -1,11 +1,11 @@
 const { Permissions } = require('discord.js');
-const Player = require('./player.js');
+const Player = require('./models/player.js');
 const Actions = require('./actions.js');
 
 const playerListener = async function(message){
 	// Is this message on a player channel by the channel's associated player?
-	let player = await Player.findOne({channelId: message.channel.id})
-	if(null == player || message.author.id != player.discordId){
+	let player = await Player.query().findOne({channelId: message.channel.id})
+	if(!player || message.author.id != player.discordId){
 		return false;
 	}
 	
@@ -21,6 +21,9 @@ const playerListener = async function(message){
 	}else if(message.content.substring(0, 1) == '-'){
 		let txt = message.content.substring(1);
 		player.emote(txt);
+	// The debug command, for whatever I'm currently testing
+	}else if('debug'==command){
+		Actions.debug(player);
 	// Simple, atomic commands
 	}else if('inv'==base || 'inventory'==base){
 		Actions.inventory(player);
@@ -32,9 +35,6 @@ const playerListener = async function(message){
 		}else{
 			Actions.look(player);
 		}
-	// The debug command, for whatever I'm currently testing
-	}else if('debug'==command){
-		Actions.debug(player);
 	// Complex, multi-part commands
 	}else if('build'==base){
 		Actions.build(player, options);	
@@ -55,7 +55,7 @@ const playerListener = async function(message){
 			message.channel.send('Get what?');
 		}
 	}else if('go'==base){
-		let room = await player.getRoom();
+		let room = await player.$query('room');
 		chosenExit = await room.getExit(options);
 		if(!!chosenExit){
 			await player.moveTo(chosenExit.to, 'move', chosenExit.name);

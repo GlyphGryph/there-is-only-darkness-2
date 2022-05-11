@@ -1,11 +1,11 @@
-const mongoose = require('mongoose');
 const Broadcast = require('./broadcast.js');
-const Player = require('./player.js');
-const buildingTemplates = require('./buildingTemplates');
+const Player = require('./models/player.js');
+const Item = require('./models/item.js');
+const itemTemplates = require('./itemTemplates');
 
 const Actions = {
 	build: async function(player, targetName){
-		await player.populate('room');
+		/*await player.populate('room');
 		let room = player.room;
 		let scaffold = await room.findInScaffolds(targetName);
 		let template = await buildingTemplates.findByName(targetName);
@@ -19,10 +19,10 @@ const Actions = {
 				player.name+" began work on a new "+template.name+"."
 			);
 			await scaffold.build(player);
-		}
+		}*/
 	},
 	consider: async function(player, category, targetName){
-		if(!category){
+		/*if(!category){
 			Broadcast.personal(player, "You can consider various topics, like 'building', or details of those topics, like 'building Stick Man'");
 			return true;
 		}
@@ -41,26 +41,33 @@ const Actions = {
 			Broadcast.personal(player, "You don't know anything about '"+category+"'.");
 			return false;
 		}
-		return true;
+		return true;*/
 	},
 	debug: async function(player){
 		console.log('Adding item');
-		await player.populate('room');
+		let template = itemTemplates.get('rock');
+		let item = await Item.query().insert({
+			name: template.name,
+			description: template.description,
+			inventoryId: player.inventoryId
+		}).returning('*');
+		console.log(item);
+		/*await player.populate('room');
 		
 		await player.room.addScaffold('stickman');
 		await player.room.addBuilding('rockpile');
-		Broadcast.personal(player, 'Added buildings');
+		Broadcast.personal(player, 'Added buildings');*/
 	},
 	drop: async function(player, targetName){
-		await player.populate('room');
+		let room = await player.$relatedQuery('room');
 		let found = await player.findInInventory(targetName);
+		let item = found.value
 		if('Item' == found.type){
-			if(await player.removeItem(found.value)){
-				await player.room.addItem(found.value);
-			}
-			Broadcast.shaped(player.room, player,
-				"You dropped the "+found.value.name+".",
-				player.name+" dropped the "+found.value.name+"."
+			item.inventoryId = await room.$relatedQuery('inventory').id;
+			item.$query.update();
+			Broadcast.shaped(room, player,
+				"You dropped the "+item.name+".",
+				player.name+" dropped the "+item.name+"."
 			);
 		}else{
 			Broadcast.personal(player, "You aren't holding that.");
@@ -155,7 +162,7 @@ const Actions = {
 		Broadcast.personal(player, textSoFar);
 	},
 	lookAt: async function(player, targetName){
-		await player.populate('room');
+		let room = await player.$relatedQuery('room');
 		let found;
 		if('self' == targetName){
 			found = {
@@ -163,14 +170,13 @@ const Actions = {
 				value: player
 			}
 		}else{
-			found = await player.room.findIn(targetName);
+			found = await room.findIn(targetName);
 		}
 		if('none' == found.type){
 			found = await player.findInInventory(targetName);
 		}
 		
 		if('Player' == found.type){
-			// TODO: This should eventually be different for yourself, those in your tribe, and strangers.
 			Broadcast.personal(player, found.value.description());
 		}else if('Item' == found.type){
 			Broadcast.personal(player, found.value.description);

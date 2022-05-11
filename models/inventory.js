@@ -29,6 +29,14 @@ class Inventory extends BaseModel {
 					from: 'inventories.id',
 					to: 'players.inventoryId'
 				}
+			},
+			items: {
+				relation: Model.HasManyRelation,
+				modelClass: Item,
+				join: {
+					from: 'inventories.id',
+					to: 'items.inventoryId'
+				}
 			}
     }; 
   }

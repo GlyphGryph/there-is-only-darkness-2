@@ -38,6 +38,18 @@ class Room extends BaseModel {
 					from: 'rooms.inventoryId',
 					to: 'inventories.id'
 				}
+			},
+			items: {
+				relation: Model.ManyToManyRelation,
+				modelClass: Item,
+				join: {
+					from: 'rooms.inventoryId',
+					through: {
+						from: 'inventory.id',
+						to: 'inventory.id'
+					},
+					to: 'items.inventoryId'
+				}
 			}
     }
   }
@@ -63,16 +75,17 @@ class Room extends BaseModel {
 		this.scaffolds ||= [];
 		this.scaffolds.push({key: key, progress: 0})
 		return this.save();
-	};
+	};*/
 
 	roomSchema.methods.findIn = async function(targetName){
 		let type = 'none';
 		console.log(this.items);
-		let found = this.items.find(item=>{return item.name.toLowerCase()==targetName;});
+		let items = await this.$relatedQuery('items');
+		let found = items.find(item=>{return item.name.toLowerCase()==targetName;});
 		if(found){
 			type = 'Item';
 		}else{
-			found = await Player.findOne({room: this, name: new RegExp("^"+targetName, "i")});
+			found = await Player.findOne({room: this, name: new RegExp("^"+targetName+"$", "i")});
 			if(found){
 				type = 'Player';
 			}
@@ -81,7 +94,7 @@ class Room extends BaseModel {
 		
 		return {type: type, value: found};
 	};
-
+/*
 	roomSchema.methods.findInBuildings = async function(targetName){
 		return this.buildings.find(building=>{return building.getName().toLowerCase()==targetName;});
 	}

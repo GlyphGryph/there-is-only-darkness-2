@@ -2,7 +2,7 @@ const {Client, Intents} = require('discord.js');
 const config = require('./config.json');
 const Game = require('./game.js');
 const forgeListener = require('./forgeListener.js');
-//const playerListener = require('./playerListener.js');
+const playerListener = require('./playerListener.js');
 
 // Db/model stuff
 const knex = require('knex')
@@ -37,7 +37,7 @@ client.once('ready', async () => {
 client.on('messageCreate', message => {
 	console.log('Received client message: '+message.content+' on '+message.channel.id);
 	forgeListener(message);
-	//playerListener(message);
+	playerListener(message);
 });
 
 client.login(config.token);
