@@ -65,9 +65,13 @@ class Room extends BaseModel {
     }
   }
 	
+	//*************
+	//Instance Methods
+	//*************
+	
 	async destroy(){
 		return await this.$query().delete();
-	};
+	}
 
 	
 	/*async addBuilding(key){
@@ -80,7 +84,7 @@ class Room extends BaseModel {
 		this.items.push(item);
 		await this.save();
 		return false;
-	};
+	}
 
 	/*async addScaffold(key){
 		this.scaffolds ||= [];
@@ -95,20 +99,17 @@ class Room extends BaseModel {
 	async findIn(targetName){
 		let type = 'none';
 		console.log(this.items);
-		let items = await this.$relatedQuery('items');
-		let found = items.find(item=>{return item.name.toLowerCase()==targetName;});
-		if(found){
-			type = 'Item';
+		let item = await this.$relatedQuery('items').findOne('name', 'ilike', targetName);
+		if(item){
+			return {type: 'Item', value: item};
 		}else{
-			players = room.$relatedQuery('players').findOne('name', 'ilike', targetName)
-			await Player.findOne({room: this, name: new RegExp("^"+targetName+"$", "i")});
-			if(found){
-				type = 'Player';
+			let player = await this.$relatedQuery('players').findOne('name', 'ilike', targetName)
+			if(player){
+				return {type: 'Player', value: player};
 			}
-			// TODO: Add building support
+			/* TODO: Add building support */
 		}
-		
-		return {type: type, value: found};
+		return {type: 'none', value: 'none'};
 	};
 /*
 	async findInBuildings(targetName){

@@ -24,6 +24,14 @@ class Item extends BaseModel {
       }
     }; 
   }
+	
+	//*************
+	//Instance Methods
+	//*************
+	
+	async getDescription(){
+		return this.name+" \n"+this.description;
+	}
 }
 
 module.exports = Item;

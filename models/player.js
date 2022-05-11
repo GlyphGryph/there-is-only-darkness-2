@@ -101,7 +101,7 @@ class Player extends BaseModel {
 	//*************
 	//Instance Methods
 	//*************
-	async description(){
+	async getDescription(){
 		let textSoFar = "Name: "+this.name;
 		let items = await this.$relatedQuery('items');
 		if(items.length > 0){

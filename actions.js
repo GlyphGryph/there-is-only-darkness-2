@@ -177,9 +177,11 @@ const Actions = {
 		}
 		
 		if('Player' == found.type){
-			Broadcast.personal(player, await found.value.description());
+			Broadcast.personal(player, await found.value.getDescription());
 		}else if('Item' == found.type){
-			Broadcast.personal(player, await found.value.description());
+			console.log(found);
+			console.log(found.value);
+			Broadcast.personal(player, await found.value.getDescription());
 		}else{
 			Broadcast.personal(player, "You don't see anything by that name here.");
 		}
