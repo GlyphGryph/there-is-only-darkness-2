@@ -12,6 +12,7 @@ class Inventory extends BaseModel {
   static get relationMappings() {
     const Player = require('./player');
 		const Room = require('./room');
+		const Item = require('./item');
 
     return {
       room: {

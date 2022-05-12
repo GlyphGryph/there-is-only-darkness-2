@@ -25,7 +25,7 @@ class Exit extends BaseModel {
         relation: Model.HasOneRelation,
         modelClass: Room,
         join: {
-          from: 'exits.sourceId',
+          from: 'exits.destinationId',
           to: 'rooms.id',
         }
 			}

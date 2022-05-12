@@ -70,7 +70,11 @@ class Room extends BaseModel {
 	//*************
 	
 	async destroy(){
-		return await this.$query().delete();
+		await this.$relatedQuery('items').delete();
+		let inventory = await this.$relatedQuery('inventory');
+		await this.$query().delete();
+		await inventory.$query().delete();
+		return true;
 	}
 
 	
@@ -120,17 +124,10 @@ class Room extends BaseModel {
 		return this.scaffolds.find(scaffold=>{return scaffold.getName().toLowerCase()==targetName;});
 	}
 
-	async getExit(name){
-		found = this.exits.find(exit => {
-			return exit.name == name;
-		});
-		if('undefined' == typeof found){
-			return null;
-		} else {
-			return found;
-		}
-	};
 */
+	async getExit(name){
+		return this.$relatedQuery('exits').findOne({name: name});
+	};
 
 	async getExitsDescription(){
 		let exits = await this.$relatedQuery('exits');

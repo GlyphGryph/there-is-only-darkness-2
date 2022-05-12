@@ -113,10 +113,12 @@ class Player extends BaseModel {
 	}
 
 	async destroy(){
+		await this.$relatedQuery('items').delete();
 		let inventory = await this.$relatedQuery('inventory');
 		await this.getChannel().then(channel=>{ channel.delete()});
 		await this.$query().delete();
 		await inventory.$query().delete();
+		return true;
 	};
 	
 	async emote(message){
@@ -154,13 +156,13 @@ class Player extends BaseModel {
 	};
 
 	async moveTo(newRoom, method, direction){
-		/*let oldRoomPlayers = await Player.find({room: this.room._id, _id: {$ne: this._id}});
-		this.room = newRoom;
-		let newRoomPlayers = await Player.find({room: this.room._id, _id: {$ne: this._id}});
+		let oldRoom = await this.$relatedQuery('room');
+		let oldRoomPlayers = await Player.query().where({roomId: oldRoom.id}).whereNot({id: this.id});
+		let newRoomPlayers = await Player.query().where({roomId: newRoom.id}).whereNot({id: this.id});
 		let player = this;
 		let directions = {
-			forward: {opposite: 'backwards'},
-			backwards: {opposite: 'forward'}
+			forwards: {opposite: 'backwards'},
+			backwards: {opposite: 'forwards'}
 		};
 		let descriptions = {
 			move: {
@@ -172,17 +174,10 @@ class Player extends BaseModel {
 		this.getChannel().then(async channel => {
 			channel.send(descriptions[method].own);
 		});
-		oldRoomPlayers.forEach(player=>{
-				player.getChannel().then(channel => {
-					channel.send(descriptions[method].othersGoing);
-				});
-		});
-		newRoomPlayers.forEach(player=>{
-			player.getChannel().then(channel => {
-				channel.send(descriptions[method].othersComing);
-			});
-		});
-		return await this.save();*/
+		await Broadcast.unshaped(oldRoomPlayers, descriptions[method].othersGoing);
+		await Broadcast.unshaped(newRoomPlayers, descriptions[method].othersComing);
+		player.roomId = newRoom.id;
+		return await player.$query().update().returning('*');
 	}
 	
 	async say(message){

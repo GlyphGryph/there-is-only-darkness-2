@@ -55,11 +55,12 @@ const playerListener = async function(message){
 			message.channel.send('Get what?');
 		}
 	}else if('go'==base){
-		let room = await player.$query('room');
+		let room = await player.$relatedQuery('room');
 		chosenExit = await room.getExit(options);
-		if(!!chosenExit){
-			await player.moveTo(chosenExit.to, 'move', chosenExit.name);
-			player.look();
+		if(chosenExit){
+			let newRoom = await chosenExit.$relatedQuery('destination');
+			await player.moveTo(newRoom, 'move', chosenExit.name);
+			Actions.look(player);
 		} else {
 			message.channel.send(options+' is not a valid exit.');
 		}

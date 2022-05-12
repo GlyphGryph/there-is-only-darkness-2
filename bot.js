@@ -35,6 +35,7 @@ client.once('ready', async () => {
 });
 
 client.on('messageCreate', message => {
+	if(message.author.id == client.user.id){ return false; }
 	console.log('Received client message: '+message.content+' on '+message.channel.id);
 	forgeListener(message);
 	playerListener(message);

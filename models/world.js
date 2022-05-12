@@ -2,6 +2,7 @@ const BaseModel = require('./base_model');
 const { Model } = require('objection');
 const Room = require('./room');
 const Player = require('./player');
+const Exit = require('./exit');
 
 class World extends BaseModel {
 	//*************
@@ -65,12 +66,17 @@ class World extends BaseModel {
 				worldId: world.id,
 				inventory: {}
 			}).returning('*');
-			/* TODO: Add inventory, add items, add exits
-			room2.exits=[{to: room1, name: "backwards"}]
-			await room2.save();
-			room1.exits=[{to: room2, name: "forward"}]
-			await room1.save();
-			*/
+			
+			await Exit.query().insert({
+				name: 'forwards',
+				sourceId: room1.id,
+				destinationId: room2.id
+			}).returning('*');
+			await Exit.query().insert({
+				name: 'backwards',
+				sourceId: room2.id,
+				destinationId: room1.id
+			}).returning('*');
 			
 			console.log('Created new world: '+world.name);
 			global.game.forgeChannel.send('Created new world: '+world.name);
@@ -115,7 +121,7 @@ class World extends BaseModel {
 		}
 		let rooms = await this.$relatedQuery('rooms');
 		for(const room of rooms){
-			room.destroy();
+			await room.destroy();
 		}
 		this.getCategoryChannel().then(channel=>{channel.delete()});
 		await this.$query().delete();
