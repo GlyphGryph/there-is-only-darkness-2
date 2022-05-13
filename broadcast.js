@@ -1,6 +1,6 @@
 const Broadcast = {
 	personal: async function(player, message){
-		return player.getChannel().then(async channel => {
+		player.getChannel().then(async channel => {
 			channel.send(message);
 		});
 	},
@@ -20,6 +20,12 @@ const Broadcast = {
 				channel.send(message);
 			});
 		});
+	},
+	monitor: async function(message){
+		global.game.monitorChannel.send(message);
+	},
+	forge: async function(message){
+		global.game.forgeChannel.send(message);
 	}
 }
 

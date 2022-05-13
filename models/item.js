@@ -18,7 +18,7 @@ class Item extends BaseModel {
         relation: Model.BelongsToOneRelation,
         modelClass: Inventory,
         join: {
-          from: 'rooms.inventoryId',
+          from: 'items.inventoryId',
           to: 'inventory.id',
         },
       }

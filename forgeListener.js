@@ -14,9 +14,9 @@ const forgeListener = async function (message){
 		message.channel.send('I am alive.');
 	}else if('create world'==cmd){
 		message.channel.send('Creating world...');
-		World.create();
+		await World.create();
 	}else if('list worlds'==cmd){
-		World.list();
+		await World.list();
 	//Complex Commands
 	}else if('destroy'==args[0]){
 		let worldName = args.slice(1).join(' ');
@@ -34,7 +34,7 @@ const forgeListener = async function (message){
 		}else if(await world.hasUser(message.author.id)){
 			message.reply('You are already a part of that world.')
 		}else{ // World Found!
-			Player.create(world, message.author);
+			await Player.create(world, message.author);
 		}
 	}else{
 		message.reply('Command "'+cmd+'" not recognized');

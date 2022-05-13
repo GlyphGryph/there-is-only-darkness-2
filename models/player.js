@@ -93,10 +93,6 @@ class Player extends BaseModel {
 		}
 		return true;
 	}
-	
-	static async otherPlayers(player){
-		return await Player.query().where({roomId: player.roomId}).whereNot({id: player.id});
-	}
 		
 	//*************
 	//Instance Methods
@@ -180,8 +176,14 @@ class Player extends BaseModel {
 		return await player.$query().update().returning('*');
 	}
 	
+	
+	
+	async otherPlayers(){
+		return await Player.query().where({roomId: this.roomId}).whereNot({id: this.id});
+	}
+	
 	async say(message){
-		let otherPlayers = await Player.otherPlayers(this);
+		let otherPlayers = await this.otherPlayers();
 		Broadcast.shaped(this, otherPlayers, 'You say "'+message+'"', this.name+' says "'+message+'"');
 	}
 }

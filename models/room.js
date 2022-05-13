@@ -15,22 +15,15 @@ class Room extends BaseModel {
 		const Inventory = require('./inventory');
 		const Item = require('./item');
 		const Exit = require('./exit');
+		const Building = require('./building');
 
     return {
-      world: {
-        relation: Model.BelongsToOneRelation,
-        modelClass: World,
-        join: {
-          from: 'players.worldId',
-          to: 'world.id',
-        },
-      },
-			players: {
-				relation: Model.HasOneRelation,
-				modelClass: Player,
+			buildings: {
+				relation: Model.HasManyRelation,
+				modelClass: Building,
 				join: {
 					from: 'rooms.id',
-					to: 'players.roomId'
+					to: 'buildings.roomId'
 				}
 			},
 			exits: {
@@ -61,13 +54,34 @@ class Room extends BaseModel {
 					to: 'items.inventoryId'
 				}
 			},
-			
+			players: {
+				relation: Model.HasOneRelation,
+				modelClass: Player,
+				join: {
+					from: 'rooms.id',
+					to: 'players.roomId'
+				}
+			},
+			world: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: World,
+        join: {
+          from: 'players.worldId',
+          to: 'world.id',
+        },
+      }
     }
   }
 	
 	//*************
 	//Instance Methods
 	//*************
+	
+	async addItem(item){
+		this.items.push(item);
+		await this.save();
+		return false;
+	}
 	
 	async destroy(){
 		await this.$relatedQuery('items').delete();
@@ -76,25 +90,6 @@ class Room extends BaseModel {
 		await inventory.$query().delete();
 		return true;
 	}
-
-	
-	/*async addBuilding(key){
-		this.buildings ||= [];
-		this.buildings.push({key: key, progress: 0})
-		return this.save();
-	};*/
-
-	async addItem(item){
-		this.items.push(item);
-		await this.save();
-		return false;
-	}
-
-	/*async addScaffold(key){
-		this.scaffolds ||= [];
-		this.scaffolds.push({key: key, progress: 0})
-		return this.save();
-	};*/
 	
 	async findInInventory(targetName){
 		return await this.$relatedQuery('items').findOne('name', 'ilike', targetName);
@@ -106,25 +101,41 @@ class Room extends BaseModel {
 		let item = await this.$relatedQuery('items').findOne('name', 'ilike', targetName);
 		if(item){
 			return {type: 'Item', value: item};
-		}else{
-			let player = await this.$relatedQuery('players').findOne('name', 'ilike', targetName)
-			if(player){
-				return {type: 'Player', value: player};
-			}
-			/* TODO: Add building support */
+		}
+		let player = await this.$relatedQuery('players').findOne('name', 'ilike', targetName)
+		if(player){
+			return {type: 'Player', value: player};
+		}
+		console.log(targetName);
+		let building = await this.findInBuildings(targetName);
+		if(building){
+			return {type: 'Building', value: building};
+		}
+		let scaffold = await this.findInScaffolds(targetName);
+		if(scaffold){
+			return {type: 'Scaffold', value: scaffold};
 		}
 		return {type: 'none', value: 'none'};
 	};
-/*
+	
 	async findInBuildings(targetName){
-		return this.buildings.find(building=>{return building.getName().toLowerCase()==targetName;});
+		let buildings = await this.getFunctionalBuildings();
+		return buildings.find(building=>{ return building.getName().toLowerCase()() == targetName.toLowerCase() })
 	}
-
+	
 	async findInScaffolds(targetName){
-		return this.scaffolds.find(scaffold=>{return scaffold.getName().toLowerCase()==targetName;});
+		let scaffolds = await this.getScaffolds();
+		return scaffolds.find(scaffold=>{ return scaffold.getName().toLowerCase() == targetName.toLowerCase() })
+	}
+	
+	async getFunctionalBuildings(){
+		return await this.$relatedQuery('buildings').where({complete: true});
+	}
+	
+	async getScaffolds(){
+		return await this.$relatedQuery('buildings').where({complete: false});
 	}
 
-*/
 	async getExit(name){
 		return this.$relatedQuery('exits').findOne({name: name});
 	};
@@ -140,19 +151,6 @@ class Room extends BaseModel {
 			return "There are no exits!";
 		}
 	};
-
-/*
-	async removeItem(item){
-		index = this.items.indexOf(item);
-		if(index >= 0){
-			this.items.splice(index, 1);
-			await this.save();
-			return true;
-		} else {
-			return false;
-		}
-	};
-	*/
 }
 
 module.exports = Room;

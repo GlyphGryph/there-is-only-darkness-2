@@ -23,34 +23,34 @@ const playerListener = async function(message){
 		player.emote(txt);
 	// The debug command, for whatever I'm currently testing
 	}else if('debug'==command){
-		Actions.debug(player);
+		await Actions.debug(player);
 	// Simple, atomic commands
 	}else if('inv'==base || 'inventory'==base){
-		Actions.inventory(player);
+		await Actions.inventory(player);
 	}else if('items'==base){
-		Actions.items(player);
+		await Actions.items(player);
 	}else if('look'==base){
 		if(options){
-			Actions.lookAt(player, options);
+			await Actions.lookAt(player, options);
 		}else{
-			Actions.look(player);
+			await Actions.look(player);
 		}
 	// Complex, multi-part commands
 	}else if('build'==base){
-		Actions.build(player, options);	
+		await Actions.build(player, options);	
 	}else if('consider'==base){
 		let category = args[1];
 		let target = args.slice(2).join(" ");
-		Actions.consider(player, category, target);	
+		await Actions.consider(player, category, target);	
 	}else if('drop'==base){
 		if(options){
-			Actions.drop(player, options);
+			await Actions.drop(player, options);
 		}else{
 			message.channel.send('Drop what?');
 		}
 	}else if('get'==base){
 		if(options){
-			Actions.get(player, options);
+			await Actions.get(player, options);
 		}else{
 			message.channel.send('Get what?');
 		}
@@ -60,7 +60,7 @@ const playerListener = async function(message){
 		if(chosenExit){
 			let newRoom = await chosenExit.$relatedQuery('destination');
 			await player.moveTo(newRoom, 'move', chosenExit.name);
-			Actions.look(player);
+			await Actions.look(player);
 		} else {
 			message.channel.send(options+' is not a valid exit.');
 		}

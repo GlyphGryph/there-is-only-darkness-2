@@ -2,24 +2,33 @@ const Broadcast = require('./broadcast.js');
 const Player = require('./models/player.js');
 const Item = require('./models/item.js');
 const itemTemplates = require('./itemTemplates');
+const Building = require('./models/building.js');
+const buildingTemplates = require('./buildingTemplates');
 
 const Actions = {
 	build: async function(player, targetName){
-		/*await player.populate('room');
-		let room = player.room;
+		let room = await player.$relatedQuery('room');
 		let scaffold = await room.findInScaffolds(targetName);
-		let template = await buildingTemplates.findByName(targetName);
 		if(scaffold){
+			await Broadcast.shaped(player, await player.otherPlayers(),
+				"You completed work on the new "+scaffold.getName()+".",
+				player.name+" completed work on the new "+scaffold.getName()+"."
+			);
 			await scaffold.build(player);
 			return true;
 		} else {
-			await room.addScaffold(template.id);
-			Broadcast.shaped(player.room, player,
-				"You began work on a new "+template.name+".",
-				player.name+" began work on a new "+template.name+"."
+			await Broadcast.shaped(player, await player.otherPlayers(),
+				"You began work on a new "+scaffold.getName()+".",
+				player.name+" began work on a new "+scaffold.getName()+"."
 			);
-			await scaffold.build(player);
-		}*/
+			let template = await buildingTemplates.findByName(targetName);
+			scaffold = await Building.query().insertGraph({
+				templateId: template.id,
+				complete: false,
+				roomId: player.roomId,
+				inventory: {}
+			}).returning('*');
+		}
 	},
 	consider: async function(player, category, targetName){
 		/*if(!category){
@@ -45,17 +54,13 @@ const Actions = {
 	},
 	debug: async function(player){
 		console.log('Adding item');
-		let template = itemTemplates.get('rock');
-		let item = await Item.query().insert({
-			name: template.name,
-			description: template.description,
-			inventoryId: player.inventoryId
+		let building = await Building.query().insertGraph({
+			templateId: 'stickman',
+			complete: false,
+			roomId: player.roomId,
+			inventory: {}
 		}).returning('*');
-		/*await player.populate('room');
-		
-		await player.room.addScaffold('stickman');
-		await player.room.addBuilding('rockpile');
-		Broadcast.personal(player, 'Added buildings');*/
+		await Broadcast.personal(player, "You did it.");	
 	},
 	drop: async function(player, targetName){
 		let item = await player.findInInventory(targetName);
@@ -64,13 +69,13 @@ const Actions = {
 			item.inventoryId = room.inventoryId;
 			console.log(item);
 			await item.$query().update();
-			let otherPlayers = await Player.otherPlayers(player);
-			Broadcast.shaped(player, otherPlayers,
+			let otherPlayers = await player.otherPlayers();
+			await Broadcast.shaped(player, otherPlayers,
 				"You dropped the "+item.name+".",
 				player.name+" dropped the "+item.name+"."
 			);
 		}else{
-			Broadcast.personal(player, "You aren't holding that.");
+			await Broadcast.personal(player, "You aren't holding that.");
 		}
 	},
 	get: async function(player, targetName){
@@ -80,21 +85,21 @@ const Actions = {
 			item.inventoryId = player.inventoryId;
 			console.log(item);
 			await item.$query().update();
-			let otherPlayers = await Player.otherPlayers(player);
-			Broadcast.shaped(player, otherPlayers,
+			let otherPlayers = await player.otherPlayers();
+			await Broadcast.shaped(player, otherPlayers,
 				"You picked up the "+item.name+".",
 				player.name+" picked up the "+item.name+"."
 			);
 		}else{
-			Broadcast.personal(player, "You don't see an item by that name here.");
+			await Broadcast.personal(player, "You don't see an item by that name here.");
 		}
 	},
 	inventory: async function(player){
 		let itemList = player.items.map(item=>{ return item.name}).join(', ');
 		if(itemList){
-			Broadcast.personal(player, "Your items: "+itemList);
+			await Broadcast.personal(player, "Your items: "+itemList);
 		}else{
-			Broadcast.personal(player, "You are carrying nothing.");
+			await Broadcast.personal(player, "You are carrying nothing.");
 		}
 	},
 	items: async function(player){
@@ -117,34 +122,34 @@ const Actions = {
 				itemList += "Carrying nothing."
 			}
 		});
-		Broadcast.personal(player, itemList);
+		await Broadcast.personal(player, itemList);
 	},
 	look: async function(player){
 		let room = await player.$relatedQuery('room');
-		let otherPlayers = await Player.query().where({roomId: room.id}).whereNot({id: player.id});
+		let otherPlayers = player.otherPlayers();
 		//Description
 		let textSoFar = room.description;
 		textSoFar += '\n---\n';
+		
 		// Buildings
-		/*let buildings = room.$relatedQuery('buildings');
-		if(room.buildings && room.buildings.length > 0){
-			textSoFar += 'Buildings: '+room.buildings.map(building =>{return building.getName()}).join(', ')+'\n';
+		let buildings = await room.getFunctionalBuildings();
+		if(buildings.length > 0){
+			textSoFar += 'Buildings: '+buildings.map(building =>{return building.getName()}).join(', ')+'\n';
 		}
-		// Buildings
-		if(room.scaffolds && room.scaffolds.length > 0){
-			textSoFar += 'Buildings in progress: '+room.scaffolds.map(scaffold =>{
-				let display = scaffold.getName();
-				display += " ("+scaffold.progress+"/"+scaffold.getTemplate().workToComplete+")"
-				return display;
-			}).join(', ')+'\n';
+		
+		// Scaffold 
+		let scaffolds = await room.getScaffolds();
+		if(scaffolds.length > 0){
+			textSoFar += 'Scaffolds: '+scaffolds.map(scaffold =>{return scaffold.getName()}).join(', ')+'\n';
 		}
-		if(room.scaffolds && room.scaffolds.length > 0 && room.buildings && room.buildings.length > 0){
+		if(buildings.length > 0 && scaffolds.length > 0){
 			textSoFar +='---\n';
-		}*/
+		}
 		
 		// Exits
 		let exitsDescription = await room.getExitsDescription();
 		textSoFar += exitsDescription;
+
 		//Players
 		if(otherPlayers.length > 0){ 
 			textSoFar += '\n---\nOther players at this location: ';
@@ -159,7 +164,7 @@ const Actions = {
 		}else{
 			textSoFar += 'There are no items here.';
 		}
-		Broadcast.personal(player, textSoFar);
+		await Broadcast.personal(player, textSoFar);
 	},
 	lookAt: async function(player, targetName){
 		let room = await player.$relatedQuery('room');
@@ -172,18 +177,18 @@ const Actions = {
 		}else{
 			found = await room.findIn(targetName);
 		}
+		console.log(found);
 		if('none' == found.type){
-			found = await player.findInInventory(targetName);
+			let item = await player.findInInventory(targetName);
+			if(item){
+				found = {type: "Item", value: item};
+			}
 		}
-		
-		if('Player' == found.type){
-			Broadcast.personal(player, await found.value.getDescription());
-		}else if('Item' == found.type){
-			console.log(found);
-			console.log(found.value);
-			Broadcast.personal(player, await found.value.getDescription());
+		console.log(found);
+		if('none' != found.type){
+			await Broadcast.personal(player, await found.value.getDescription());
 		}else{
-			Broadcast.personal(player, "You don't see anything by that name here.");
+			await Broadcast.personal(player, "You don't see anything by that name here.");
 		}
 	}
 }
