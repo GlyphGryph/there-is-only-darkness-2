@@ -31,7 +31,7 @@ const Actions = {
 		}
 	},
 	consider: async function(player, category, targetName){
-		/*if(!category){
+		if(!category){
 			Broadcast.personal(player, "You can consider various topics, like 'building', or details of those topics, like 'building Stick Man'");
 			return true;
 		}
@@ -50,7 +50,7 @@ const Actions = {
 			Broadcast.personal(player, "You don't know anything about '"+category+"'.");
 			return false;
 		}
-		return true;*/
+		return true;
 	},
 	debug: async function(player){
 		console.log('Adding item');
