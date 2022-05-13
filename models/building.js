@@ -77,7 +77,7 @@ class Building extends BaseModel {
 		let progressChange = 1;
 		this.complete = true;
 		await this.$query().update();
-		Broadcast.shaped(player, player.otherPlayers(),
+		Broadcast.shaped(player, await player.otherPlayers(),
 			"You worked on the new "+this.getName()+" and added an additional "+progressChange+" progress.",
 			player.name+" worked on the new "+this.getName()+" and added an additional "+progressChange+" progress."
 		);

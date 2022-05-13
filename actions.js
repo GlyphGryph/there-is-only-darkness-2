@@ -10,17 +10,13 @@ const Actions = {
 		let room = await player.$relatedQuery('room');
 		let scaffold = await room.findInScaffolds(targetName);
 		if(scaffold){
+			await scaffold.build(player);
 			await Broadcast.shaped(player, await player.otherPlayers(),
 				"You completed work on the new "+scaffold.getName()+".",
 				player.name+" completed work on the new "+scaffold.getName()+"."
 			);
-			await scaffold.build(player);
 			return true;
 		} else {
-			await Broadcast.shaped(player, await player.otherPlayers(),
-				"You began work on a new "+scaffold.getName()+".",
-				player.name+" began work on a new "+scaffold.getName()+"."
-			);
 			let template = await buildingTemplates.findByName(targetName);
 			scaffold = await Building.query().insertGraph({
 				templateId: template.id,
@@ -28,6 +24,10 @@ const Actions = {
 				roomId: player.roomId,
 				inventory: {}
 			}).returning('*');
+			await Broadcast.shaped(player, await player.otherPlayers(),
+				"You began work on a new "+await scaffold.getName()+".",
+				player.name+" began work on a new "+scaffold.getName()+"."
+			);
 		}
 	},
 	consider: async function(player, category, targetName){
