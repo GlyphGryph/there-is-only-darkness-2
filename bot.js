@@ -25,7 +25,7 @@ client.once('ready', async () => {
 	await client.guilds.fetch(config.serverId).then(guild => {
 		global.game.guild = guild;
 	});
-	await client.channels.fetch(config.monitorChannelId).then( async 	channel => {
+	await client.channels.fetch(config.monitorChannelId).then(async channel => {
 		global.game.monitorChannel = channel;
 		await Broadcast.monitor('Connected!');
 		console.log('Connected to Discord server.');
@@ -46,7 +46,6 @@ client.on('messageCreate', async function(message){
 		console.log('HELP!');
 		let message = "Bot encountered a lethal error and died."
 		await Broadcast.monitor(message);
-		await Broadcast.unshaped(await Player.query(), message);
 		throw err;
 	}
 });

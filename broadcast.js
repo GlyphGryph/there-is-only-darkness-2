@@ -22,10 +22,10 @@ const Broadcast = {
 		});
 	},
 	monitor: async function(message){
-		global.game.monitorChannel.send(message);
+		await global.game.monitorChannel.send(message);
 	},
 	forge: async function(message){
-		global.game.forgeChannel.send(message);
+		await global.game.forgeChannel.send(message);
 	}
 }
 
