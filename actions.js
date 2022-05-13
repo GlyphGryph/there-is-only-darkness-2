@@ -1,7 +1,7 @@
 const Broadcast = require('./broadcast.js');
 const Player = require('./models/player.js');
 const Item = require('./models/item.js');
-const itemTemplates = require('./itemTemplates');
+const ItemTemplateManager = require('./itemTemplateManager');
 const Building = require('./models/building.js');
 const buildingTemplates = require('./buildingTemplates');
 
@@ -18,16 +18,20 @@ const Actions = {
 			return true;
 		} else {
 			let template = await buildingTemplates.findByName(targetName);
-			scaffold = await Building.query().insertGraph({
-				templateId: template.id,
-				complete: false,
-				roomId: player.roomId,
-				inventory: {}
-			}).returning('*');
-			await Broadcast.shaped(player, await player.otherPlayers(),
-				"You began work on a new "+await scaffold.getName()+".",
-				player.name+" began work on a new "+scaffold.getName()+"."
-			);
+			if(player.canPayCost({materials: template.cost})){
+				scaffold = await Building.query().insertGraph({
+					templateId: template.id,
+					complete: false,
+					roomId: player.roomId,
+					inventory: {}
+				}).returning('*');
+				await Broadcast.shaped(player, await player.otherPlayers(),
+					"You began work on a new "+await scaffold.getName()+".",
+					player.name+" began work on a new "+scaffold.getName()+"."
+				);
+			}else{
+				await Broadcast.personal(player, player.missingCostMessage({materials: template.cost}));
+			}
 		}
 	},
 	consider: async function(player, category, targetName){

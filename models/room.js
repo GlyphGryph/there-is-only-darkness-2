@@ -34,6 +34,14 @@ class Room extends BaseModel {
 					to: 'exits.sourceId'
 				}
 			},
+			entrances: {
+				relation: Model.HasManyRelation,
+				modelClass: Exit,
+				join: {
+					from: 'rooms.id',
+					to: 'exits.destinationId'
+				}
+			},
 			inventory: {
 				relation: Model.BelongsToOneRelation,
 				modelClass: Inventory,
@@ -84,6 +92,12 @@ class Room extends BaseModel {
 	}
 	
 	async destroy(){
+		await this.$relatedQuery('exits').delete();
+		await this.$relatedQuery('entrances').delete();
+		let buildings = await this.$relatedQuery('buildings');
+		for(const building of buildings){
+			building.destroy();
+		};
 		await this.$relatedQuery('items').delete();
 		let inventory = await this.$relatedQuery('inventory');
 		await this.$query().delete();

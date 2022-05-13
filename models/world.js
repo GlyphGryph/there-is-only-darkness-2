@@ -67,6 +67,15 @@ class World extends BaseModel {
 				inventory: {}
 			}).returning('*');
 			
+			let item1 = await Item.query().insert({
+				inventoryId: room1.inventoryId,
+				templateId: 'rock'
+			});
+			let item2 = await Item.query().insert({
+				inventoryId: room2.inventoryId,
+				templateId: 'stick'
+			});
+			
 			await Exit.query().insert({
 				name: 'forwards',
 				sourceId: room1.id,

@@ -3,6 +3,9 @@ buildingTemplates.set('stickman', {
 	id: 'stickman',
 	name: "Stick Man",
 	description: "A man made of sticks",
+	cost: [
+		{type: 'rock', amount: 2}
+	],
 	baseDurability: 10,
 	workToComplete: 5
 });
@@ -10,6 +13,9 @@ buildingTemplates.set('rockpile', {
 	id: 'rockpile',
 	name: "Rock Pile",
 	description: "A pile of rocks.",
+	cost: [
+		{type: 'rock', amount: 3}
+	],
 	baseDurability: 10,
 	workToComplete: 100
 });

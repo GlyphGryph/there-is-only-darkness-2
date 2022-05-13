@@ -1,5 +1,6 @@
 const BaseModel = require('./base_model');
 const { Model } = require('objection');
+const ItemTemplateManager = require('../ItemTemplateManager');
 
 class Item extends BaseModel {
 	//*************
@@ -28,9 +29,12 @@ class Item extends BaseModel {
 	//*************
 	//Instance Methods
 	//*************
-	
 	async getDescription(){
-		return this.name+" \n"+this.description;
+		return this.getTemplate().name+" \n"+this.getTemplate().description;
+	}
+	
+	getTemplate(){
+		return ItemTemplateManager.get(templateId);
 	}
 }
 

@@ -97,15 +97,15 @@ class Player extends BaseModel {
 	//*************
 	//Instance Methods
 	//*************
-	async getDescription(){
-		let textSoFar = "Name: "+this.name;
-		let items = await this.$relatedQuery('items');
-		if(items.length > 0){
-			textSoFar += "\nItems: "+items.map(item => {
-				return item.name;
-			}).join(", ");
+	async canPayMaterialCost(cost){
+		
+	}
+	async canPayCost(cost){
+		if(cost.materials){
+			return await canPayMaterialCost(cost.materials);
+		}else{
+			return true;
 		}
-		return textSoFar;
 	}
 
 	async destroy(){
@@ -120,6 +120,12 @@ class Player extends BaseModel {
 	async emote(message){
 		let players = await Player.query().where({roomId: this.roomId});
 		Broadcast.unshaped(players, "*"+this.name+message+"*");
+	}
+	
+	async findMaterial(id){
+		let room = await this.$relatedQuery('room');
+		let availableItems = (await this.$relatedQuery('items')).concat((await room.$relatedQuery('items'))); 
+		return availableItems.find(item=>{ return item.templateId == id });
 	}
 
 	async findInInventory(targetName){
@@ -151,6 +157,17 @@ class Player extends BaseModel {
 		return channel;
 	};
 
+	async getDescription(){
+		let textSoFar = "Name: "+this.name;
+		let items = await this.$relatedQuery('items');
+		if(items.length > 0){
+			textSoFar += "\nItems: "+items.map(item => {
+				return item.name;
+			}).join(", ");
+		}
+		return textSoFar;
+	}
+	
 	async moveTo(newRoom, method, direction){
 		let oldRoom = await this.$relatedQuery('room');
 		let oldRoomPlayers = await Player.query().where({roomId: oldRoom.id}).whereNot({id: this.id});

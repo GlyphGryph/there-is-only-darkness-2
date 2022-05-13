@@ -53,7 +53,10 @@ class Building extends BaseModel {
 	//*************
 	
 	async destroy(){
+		await this.$relatedQuery('items').delete();
+		let inventory = await this.$relatedQuery('inventory');
 		await this.$query().delete();
+		await inventory.$query().delete();
 		return true;
 	}
 	
