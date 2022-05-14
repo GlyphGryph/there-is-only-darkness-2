@@ -18,7 +18,16 @@ const Actions = {
 			return true;
 		} else {
 			let template = await buildingTemplates.findByName(targetName);
-			if(player.canPayCost({materials: template.cost})){
+			missingMaterials = player.getMissingMaterials(template.cost);
+			// If missing materials, tell user what materials they are missing
+			if(missingMaterials.length > 0){
+				let textSoFar = "You are missing the following materials:\n"
+				for(let missingMaterial of missingMaterials){
+					textSoFar += ""+missingMaterial.type+": "+missingMaterial.amount;
+				}
+				await Broadcast.personal(player, textSoFar);
+			// Otherwise, build a scaffold using those materials
+			}else{
 				scaffold = await Building.query().insertGraph({
 					templateId: template.id,
 					complete: false,
@@ -29,8 +38,6 @@ const Actions = {
 					"You began work on a new "+await scaffold.getName()+".",
 					player.name+" began work on a new "+scaffold.getName()+"."
 				);
-			}else{
-				await Broadcast.personal(player, player.missingCostMessage({materials: template.cost}));
 			}
 		}
 	},

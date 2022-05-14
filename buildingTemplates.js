@@ -4,10 +4,11 @@ buildingTemplates.set('stickman', {
 	name: "Stick Man",
 	description: "A man made of sticks",
 	cost: [
-		{type: 'rock', amount: 2}
+		{type: 'stick', amount: 2}
 	],
 	baseDurability: 10,
-	workToComplete: 5
+	workToComplete: 5,
+	setupWork: 3
 });
 buildingTemplates.set('rockpile', {
 	id: 'rockpile',
@@ -17,7 +18,8 @@ buildingTemplates.set('rockpile', {
 		{type: 'rock', amount: 3}
 	],
 	baseDurability: 10,
-	workToComplete: 100
+	workToComplete: 100,
+	setupWork: 1
 });
 
 const buildingTemplatesByName = new Map();

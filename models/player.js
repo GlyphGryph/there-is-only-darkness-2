@@ -97,15 +97,16 @@ class Player extends BaseModel {
 	//*************
 	//Instance Methods
 	//*************
-	async canPayMaterialCost(cost){
-		
-	}
-	async canPayCost(cost){
-		if(cost.materials){
-			return await canPayMaterialCost(cost.materials);
-		}else{
-			return true;
+	async getMissingMaterials(costs){
+		missing = [];
+		for(let cost of costs){
+			let found = findMaterial(cost.type);
+			let difference = cost.amount - found.length;
+			if(difference > 0){
+				missing.push({type: cost.type, amount: difference});
+			}
 		}
+		return missing;
 	}
 
 	async destroy(){
@@ -122,10 +123,12 @@ class Player extends BaseModel {
 		Broadcast.unshaped(players, "*"+this.name+message+"*");
 	}
 	
-	async findMaterial(id){
+	async findMaterial(templateId){
 		let room = await this.$relatedQuery('room');
-		let availableItems = (await this.$relatedQuery('items')).concat((await room.$relatedQuery('items'))); 
-		return availableItems.find(item=>{ return item.templateId == id });
+		let availableItems = await this.$relatedQuery('items').where({templateId: templateId})
+		availableItems = availableItems.concat(await room.$relatedQuery('items').where({templateId: templateId})); 
+		
+		return availableItems;
 	}
 
 	async findInInventory(targetName){
