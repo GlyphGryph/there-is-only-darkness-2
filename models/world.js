@@ -3,6 +3,7 @@ const { Model } = require('objection');
 const Room = require('./room');
 const Player = require('./player');
 const Exit = require('./exit');
+const Item = require('./item');
 
 class World extends BaseModel {
 	//*************
@@ -67,14 +68,8 @@ class World extends BaseModel {
 				inventory: {}
 			}).returning('*');
 			
-			let item1 = await Item.query().insert({
-				inventoryId: room1.inventoryId,
-				templateId: 'rock'
-			});
-			let item2 = await Item.query().insert({
-				inventoryId: room2.inventoryId,
-				templateId: 'stick'
-			});
+			let item1 = await Item.create('stick', room2.inventoryId);
+			let item2 = await Item.create('rock', room1.inventoryId);
 			
 			await Exit.query().insert({
 				name: 'forwards',

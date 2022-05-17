@@ -26,15 +26,25 @@ class Item extends BaseModel {
     }; 
   }
 	
+	static async create(templateId, inventoryId){
+		let template = ItemTemplateManager.get(templateId);
+		return await Item.query().insert({
+			name: template.name,
+			description: template.description,
+			inventoryId: inventoryId,
+			templateId: templateId
+		}).returning('*');
+	}
+	
 	//*************
 	//Instance Methods
 	//*************
 	async getDescription(){
-		return this.getTemplate().name+" \n"+this.getTemplate().description;
+		return this.name+" \n"+this.description;
 	}
 	
 	getTemplate(){
-		return ItemTemplateManager.get(templateId);
+		return ItemTemplateManager.get(this.templateId);
 	}
 }
 

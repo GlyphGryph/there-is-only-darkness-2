@@ -4,9 +4,9 @@
  */
 exports.up = function(knex) {
   return knex.schema.table('items', (table) => {
-		table.dropColumn('name')
-		table.dropColumn('description')
 		table.string('templateId')
+		table.text('description')
+
 	});
 };
 
@@ -17,5 +17,6 @@ exports.up = function(knex) {
 exports.down = function(knex) {
   return knex.schema.table('items', (table) => {
 		table.dropColumn('templateId')
+		table.dropColumn('description')
 	})
 };

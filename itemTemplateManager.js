@@ -3,7 +3,7 @@ class ItemTemplateManager{
 	
 	
 	static get(id){
-		return itemTemplates.get(id);
+		return ItemTemplateManager.itemTemplates.get(id);
 	}
 }
 ItemTemplateManager.itemTemplates.set('stick', { 
