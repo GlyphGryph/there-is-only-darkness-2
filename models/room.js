@@ -96,7 +96,7 @@ class Room extends BaseModel {
 		await this.$relatedQuery('entrances').delete();
 		let buildings = await this.$relatedQuery('buildings');
 		for(const building of buildings){
-			building.destroy();
+			await building.destroy();
 		};
 		await this.$relatedQuery('items').delete();
 		let inventory = await this.$relatedQuery('inventory');
@@ -134,7 +134,7 @@ class Room extends BaseModel {
 	
 	async findInBuildings(targetName){
 		let buildings = await this.getFunctionalBuildings();
-		return buildings.find(building=>{ return building.getName().toLowerCase()() == targetName.toLowerCase() })
+		return buildings.find(building=>{ return building.getName().toLowerCase() == targetName.toLowerCase() })
 	}
 	
 	async findInScaffolds(targetName){

@@ -97,10 +97,22 @@ class Player extends BaseModel {
 	//*************
 	//Instance Methods
 	//*************
-	async getMissingMaterials(costs){
-		missing = [];
+	async getAccessibleMaterials(costs){
+		let found = [];
 		for(let cost of costs){
-			let found = findMaterial(cost.type);
+			let items = await this.findMaterials(cost.type)
+			console.log("FOUND ITEMS");
+			console.log(items);
+			console.log(items.slice(0,cost.amount));
+			found = found.concat(items.slice(0,cost.amount));
+		}
+		console.log(found);
+		return found;
+	}
+	async getMissingMaterials(costs){
+		let missing = [];
+		for(let cost of costs){
+			let found = await this.findMaterials(cost.type);
 			let difference = cost.amount - found.length;
 			if(difference > 0){
 				missing.push({type: cost.type, amount: difference});
@@ -123,11 +135,10 @@ class Player extends BaseModel {
 		Broadcast.unshaped(players, "*"+this.name+message+"*");
 	}
 	
-	async findMaterial(templateId){
+	async findMaterials(templateId){
 		let room = await this.$relatedQuery('room');
 		let availableItems = await this.$relatedQuery('items').where({templateId: templateId})
 		availableItems = availableItems.concat(await room.$relatedQuery('items').where({templateId: templateId})); 
-		
 		return availableItems;
 	}
 

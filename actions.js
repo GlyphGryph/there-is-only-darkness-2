@@ -18,26 +18,39 @@ const Actions = {
 			return true;
 		} else {
 			let template = await buildingTemplates.findByName(targetName);
-			missingMaterials = player.getMissingMaterials(template.cost);
-			// If missing materials, tell user what materials they are missing
-			if(missingMaterials.length > 0){
-				let textSoFar = "You are missing the following materials:\n"
-				for(let missingMaterial of missingMaterials){
-					textSoFar += ""+missingMaterial.type+": "+missingMaterial.amount;
+			//If this is a valid building template, build it
+			if(template){
+				console.log(template);
+				let missingMaterials = await player.getMissingMaterials(template.cost);
+				// If missing materials, tell user what materials they are missing
+				if(missingMaterials.length > 0){
+					let textSoFar = "You are missing the following materials:\n"
+					for(let missingMaterial of missingMaterials){
+						textSoFar += ""+missingMaterial.type+": "+missingMaterial.amount;
+					}
+					await Broadcast.personal(player, textSoFar);
+				// Otherwise, build a scaffold using those materials
+				}else{
+					console.log(template.cost);
+					let foundItems = await player.getAccessibleMaterials(template.cost);
+					scaffold = await Building.query().insertGraph({
+						templateId: template.id,
+						complete: false,
+						roomId: player.roomId,
+						inventory: {}
+					}).returning('*');
+					console.log('building with: ')
+					console.log(foundItems);
+					for(items of foundItems){
+						await items.moveTo(scaffold.inventoryId);
+					}
+					await Broadcast.shaped(player, await player.otherPlayers(),
+						"You began work on a new "+await scaffold.getName()+".",
+						player.name+" began work on a new "+scaffold.getName()+"."
+					);
 				}
-				await Broadcast.personal(player, textSoFar);
-			// Otherwise, build a scaffold using those materials
 			}else{
-				scaffold = await Building.query().insertGraph({
-					templateId: template.id,
-					complete: false,
-					roomId: player.roomId,
-					inventory: {}
-				}).returning('*');
-				await Broadcast.shaped(player, await player.otherPlayers(),
-					"You began work on a new "+await scaffold.getName()+".",
-					player.name+" began work on a new "+scaffold.getName()+"."
-				);
+				await Broadcast.personal(player, "You don't know how to build a "+targetName+".");
 			}
 		}
 	},
@@ -65,21 +78,15 @@ const Actions = {
 	},
 	debug: async function(player){
 		console.log('Adding item');
-		let building = await Building.query().insertGraph({
-			templateId: 'stickman',
-			complete: false,
-			roomId: player.roomId,
-			inventory: {}
-		}).returning('*');
-		await Broadcast.personal(player, "You did it.");	
+		Item.create('stick', player.inventoryId);
+		Item.create('rock', player.inventoryId);
+		await Broadcast.personal(player, "You made some stuff.");	
 	},
 	drop: async function(player, targetName){
 		let item = await player.findInInventory(targetName);
 		if(item){
 			let room = await player.$relatedQuery('room');
-			item.inventoryId = room.inventoryId;
-			console.log(item);
-			await item.$query().update();
+			await item.moveTo(room.inventoryId);
 			let otherPlayers = await player.otherPlayers();
 			await Broadcast.shaped(player, otherPlayers,
 				"You dropped the "+item.name+".",
@@ -93,9 +100,7 @@ const Actions = {
 		let room = await player.$relatedQuery('room');
 		let item = await room.findInInventory(targetName);
 		if(item){
-			item.inventoryId = player.inventoryId;
-			console.log(item);
-			await item.$query().update();
+			await item.moveTo(player.inventoryId);
 			let otherPlayers = await player.otherPlayers();
 			await Broadcast.shaped(player, otherPlayers,
 				"You picked up the "+item.name+".",

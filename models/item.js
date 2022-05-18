@@ -46,6 +46,11 @@ class Item extends BaseModel {
 	getTemplate(){
 		return ItemTemplateManager.get(this.templateId);
 	}
+	
+	async moveTo(inventoryId){
+		this.inventoryId = inventoryId;
+		await this.$query().update();
+	}
 }
 
 module.exports = Item;

@@ -60,12 +60,19 @@ class Building extends BaseModel {
 		return true;
 	}
 	
-	getDescription(){
+	async getDescription(){
 		let type = 'Building';
 		if(!this.complete){
 			type = 'Scaffold';
 		}
-		return type+": "+this.getName()+"\n"+this.getTemplate().description;
+		let textSoFar = type+": "+this.getName()+"\n"+this.getTemplate().description+"\n";
+		let items = await this.$relatedQuery('items');
+		if(items && items.length > 0){
+			textSoFar += 'Contains: '+items.map(item =>{return item.name}).join(', ');
+		}else{
+			textSoFar += 'This is made of nothing.';
+		}
+		return textSoFar;
 	}
 
 	getName(){
